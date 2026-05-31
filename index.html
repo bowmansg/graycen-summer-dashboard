@@ -75,6 +75,19 @@
     .recovery-check{display:flex;align-items:center;gap:10px;border:1px solid var(--line);background:#f8f8f6;border-radius:16px;padding:12px;font-size:14px;font-weight:700;color:#444}
     .recovery-check input{width:auto;accent-color:var(--ice)}
     .btn{border:0;background:var(--warm);color:#fff;border-radius:16px;padding:13px 16px;font-weight:800;cursor:pointer;width:100%;margin-top:12px}
+    .session-actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+    .mini-btn{border:1px solid var(--line);background:#fff;border-radius:999px;padding:7px 11px;font-size:12px;font-weight:900;cursor:pointer;color:#333}
+    .mini-btn.edit{border-color:rgba(57,255,20,.55)}
+    .mini-btn.delete{border-color:#f1b1aa;color:#b42318}
+    .edit-overlay{position:fixed;inset:0;background:rgba(0,0,0,.48);z-index:999;display:none;align-items:center;justify-content:center;padding:16px}
+    .edit-overlay.open{display:flex}
+    .edit-panel{width:min(620px,100%);max-height:92vh;overflow:auto;background:#fff;border-radius:26px;padding:18px;box-shadow:0 24px 80px rgba(0,0,0,.28)}
+    .edit-panel h2{margin-bottom:4px}
+    .edit-actions{display:flex;gap:10px;margin-top:14px}
+    .edit-actions .btn{margin-top:0}
+    .btn.secondary{background:#f2f2ef;color:#222}
+    .btn.danger{background:#b42318;color:#fff}
+    .modal-help{font-size:13px;color:#666;margin:0 0 14px}
     .week-row{display:flex;justify-content:space-between;gap:8px;align-items:center;border:1px solid var(--line);border-radius:16px;padding:12px;margin-bottom:8px;cursor:pointer}
     .week-row.active{background:var(--warm);color:#fff;box-shadow:inset 0 -3px 0 var(--ice)}
     .week-large{display:grid;grid-template-columns:repeat(7,1fr);gap:10px}
@@ -289,6 +302,38 @@ Check your schedule, stay on top of the week ahead, and log the work that helps 
     </div>
   </main>
 </div>
+
+  <div class="edit-overlay" id="editOverlay">
+    <div class="edit-panel">
+      <h2>Edit Item</h2>
+      <p class="modal-help">Update the details below. Changes save on this device/browser.</p>
+      <input type="hidden" id="editId">
+      <div class="form-grid">
+        <input type="date" id="editDate">
+        <select id="editType">
+          <option value="Ice">On-Ice</option>
+          <option value="Shooting">Shooting</option>
+          <option value="Stickhandling">Stickhandling</option>
+          <option value="Strength">Off-ice Workout</option>
+          <option value="Other">Other</option>
+        </select>
+        <input id="editStart" placeholder="Start time">
+        <input id="editEnd" placeholder="End time">
+        <input class="full" id="editTitle" placeholder="Title">
+        <input class="full" id="editLocation" placeholder="Location">
+        <input id="editMinutes" placeholder="Minutes">
+        <label class="full recovery-check">
+          <input type="checkbox" id="editRecovery">
+          <span>Recovery completed — Normatec / compression / mobility / stretch</span>
+        </label>
+        <textarea class="full" id="editNote" placeholder="Optional note"></textarea>
+      </div>
+      <div class="edit-actions">
+        <button class="btn" onclick="saveEdit()">Save Changes</button>
+        <button class="btn secondary" onclick="closeEdit()">Cancel</button>
+      </div>
+    </div>
+  </div>
 
 <script>
 const STORAGE_KEY = "graycenSummerDashboardSessions_v1";
@@ -939,6 +984,18 @@ function exportDashboardData(){
 }
 loadSavedSessions();
 
+function ensureSessionIds(){
+ let changed = false;
+ sessions.forEach((s, idx) => {
+  if(!s.id){
+   s.id = "seed-" + idx + "-" + String(s.date || "").replaceAll("-", "");
+   changed = true;
+  }
+ });
+ return changed;
+}
+ensureSessionIds();
+
 let displayMonth = new Date("2026-06-01T12:00:00");
 let weekStart = startOfWeek(new Date("2026-06-01T12:00:00"));
 
@@ -950,6 +1007,23 @@ function showTab(id, btn){
  renderAll();
 }
 function parseDate(s){return new Date(s+"T12:00:00")}
+function timeToMinutes(time){
+ if(!time || time === "TBD" || time === "Logged" || time === "All Day") return 9999;
+ const cleaned = String(time).trim().toUpperCase();
+ const match = cleaned.match(/^(\d{1,2})(?::(\d{2}))?\s*(AM|PM)$/);
+ if(!match) return 9999;
+ let hour = parseInt(match[1], 10);
+ const minute = parseInt(match[2] || "0", 10);
+ const period = match[3];
+ if(period === "AM" && hour === 12) hour = 0;
+ if(period === "PM" && hour !== 12) hour += 12;
+ return hour * 60 + minute;
+}
+function compareSessions(a,b){
+ const dateCompare = String(a.date || "").localeCompare(String(b.date || ""));
+ if(dateCompare !== 0) return dateCompare;
+ return timeToMinutes(a.start) - timeToMinutes(b.start);
+}
 function fmt(s, opts={weekday:"long",month:"long",day:"numeric"}){return parseDate(s).toLocaleDateString("en-US",opts)}
 function iso(d){return d.toISOString().slice(0,10)}
 function startOfWeek(d){let x=new Date(d);x.setDate(x.getDate()-x.getDay());x.setHours(0,0,0,0);return x}
@@ -961,7 +1035,24 @@ function typeClass(t){return t==="Ice"?"ice":t==="Strength"?"strength":t==="Shoo
 function chipClass(t){return t==="Ice"?"chip-ice":t==="Strength"?"chip-strength":t==="Shooting"?"chip-shooting":t==="Stickhandling"?"chip-stick":"chip-other"}
 function displayType(t){return t==="Ice"?"On-ice":t==="Strength"?"Off-ice":t==="Stickhandling"?"Stick handling":t}
 function sessionHTML(s){
- return `<div class="session"><div class="session-top"><div><span class="pill ${typeClass(s.type)}">${displayType(s.type)}</span> ${s.owner==="Graycen"?'<span class="pill journal">Journal</span>':''}<div class="session-title">${s.title}</div><div class="session-meta">${fmt(s.date)} · ${s.start||""}${s.end?` – ${s.end}`:""}<br>${s.location||""}</div></div><div class="minutes"><b>${s.minutes||0}</b><br><span class="muted">min</span></div></div>${s.note?`<div class="note">${s.note}</div>`:""}</div>`;
+ const editId = String(s.id || "");
+ return `<div class="session">
+  <div class="session-top">
+    <div>
+      <span class="pill ${typeClass(s.type)}">${displayType(s.type)}</span>
+      ${s.owner==="Graycen"?'<span class="pill journal">Journal</span>':''}
+      ${s.recovery?'<span class="pill recovery">Recovery</span>':''}
+      <div class="session-title">${s.title}</div>
+      <div class="session-meta">${fmt(s.date)} · ${s.start||""}${s.end?` – ${s.end}`:""}<br>${s.location||""}</div>
+    </div>
+    <div class="minutes"><b>${s.minutes||0}</b><br><span class="muted">min</span></div>
+  </div>
+  ${s.note?`<div class="note">${s.note}</div>`:""}
+  <div class="session-actions">
+    <button class="mini-btn edit" onclick="event.stopPropagation(); editSession('${editId}')">Edit</button>
+    <button class="mini-btn delete" onclick="event.stopPropagation(); deleteSession('${editId}')">Delete</button>
+  </div>
+</div>`;
 }
 function awayNoticeHTML(block){
  if(!block) return "";
@@ -971,7 +1062,7 @@ function renderAll(){
  let selected = document.getElementById("selectedDate")?.value || "2026-06-01";
  if(document.getElementById("logDate")) document.getElementById("logDate").value = selected;
  let block=getBlock(selected);
- let daySessions=sessions.filter(s=>s.date===selected).sort((a,b)=>(a.start||"").localeCompare(b.start||""));
+ let daySessions=sessions.filter(s=>s.date===selected).sort((a,b)=>timeToMinutes(a.start)-timeToMinutes(b.start));
  document.getElementById("dailyTitle").textContent = fmt(selected);
  document.getElementById("awayNotice").innerHTML = awayNoticeHTML(block);
  document.getElementById("dailySessions").innerHTML = daySessions.length?daySessions.map(sessionHTML).join(""):`<div class="empty">No sessions scheduled or logged for this date.</div>`;
@@ -987,7 +1078,7 @@ function renderAll(){
  document.getElementById("awayDaysTotal").textContent = countAwayDays();
  document.getElementById("homeSkillTotal").textContent = sessions.filter(s=>s.owner==="Parent"&&(s.type==="Shooting"||s.type==="Stickhandling")).length;
 
- let next=sessions.filter(s=>s.owner==="Parent"&&parseDate(s.date)>=parseDate(selected)).sort((a,b)=>a.date.localeCompare(b.date) || (a.start||"").localeCompare(b.start||""))[0];
+ let next=sessions.filter(s=>s.owner==="Parent"&&parseDate(s.date)>=parseDate(selected)).sort(compareSessions)[0];
  document.getElementById("nextTitle").textContent = next?next.title:"—";
  document.getElementById("nextMeta").textContent = next?`${fmt(next.date,{month:"short",day:"numeric"})} · ${next.start} · ${next.location}`:"No upcoming sessions";
 
@@ -1016,7 +1107,7 @@ function renderWeekLarge(){
  let html="";
  for(let i=0;i<7;i++){
   let d=new Date(weekStart); d.setDate(d.getDate()+i); let id=iso(d);
-  let b=getBlock(id); let items=sessions.filter(s=>s.date===id).sort((a,b)=>(a.start||"").localeCompare(b.start||""));
+  let b=getBlock(id); let items=sessions.filter(s=>s.date===id).sort((a,b)=>timeToMinutes(a.start)-timeToMinutes(b.start));
   html += `<div class="week-day ${b?'away-bg':''}" onclick="setSelected('${id}')"><div class="week-date">${d.toLocaleDateString("en-US",{weekday:"short"})}</div><div class="week-label">${d.toLocaleDateString("en-US",{month:"short",day:"numeric"})}</div>${awayNoticeHTML(b)}${items.length?items.map(s=>`<div class="day-chip ${chipClass(s.type)}">${s.start && s.start!=="All Day"?s.start+" · ":""}${s.title}</div>`).join(""):`<div class="empty" style="padding:14px;font-size:13px">No scheduled items.</div>`}</div>`;
  }
  document.getElementById("weekLarge").innerHTML=html;
@@ -1032,14 +1123,14 @@ function renderMonth(){
  let html=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].map(d=>`<div class="dow">${d}</div>`).join("");
  for(let i=0;i<42;i++){
   let d=new Date(start); d.setDate(start.getDate()+i); let id=iso(d);
-  let out=d.getMonth()!==month; let b=getBlock(id); let items=sessions.filter(s=>s.date===id).sort((a,b)=>(a.start||"").localeCompare(b.start||""));
+  let out=d.getMonth()!==month; let b=getBlock(id); let items=sessions.filter(s=>s.date===id).sort((a,b)=>timeToMinutes(a.start)-timeToMinutes(b.start));
   html += `<div class="day ${out?'out':''} ${id===selected?'selected':''}" onclick="setSelected('${id}')"><div class="date-num">${d.getDate()}</div>${b?`<div class="day-chip chip-away">${b.event}</div>`:""}${items.slice(0,4).map(s=>`<div class="day-chip ${chipClass(s.type)}">${s.title}</div>`).join("")}${items.length>4?`<div class="day-chip">+${items.length-4} more</div>`:""}</div>`;
  }
  document.getElementById("calendarGrid").innerHTML=html;
 }
 function renderLists(){
  let selected=document.getElementById("selectedDate")?.value || "2026-06-01";
- let upcoming=sessions.filter(s=>s.owner==="Parent"&&parseDate(s.date)>=parseDate(selected)).sort((a,b)=>a.date.localeCompare(b.date) || (a.start||"").localeCompare(b.start||""));
+ let upcoming=sessions.filter(s=>s.owner==="Parent"&&parseDate(s.date)>=parseDate(selected)).sort(compareSessions);
  document.getElementById("upcomingList").innerHTML=upcoming.length?upcoming.map(sessionHTML).join(""):`<div class="empty">No upcoming sessions.</div>`;
  let journal=sessions.filter(s=>s.owner==="Graycen").slice().reverse();
  document.getElementById("recentJournal").innerHTML=journal.length?journal.map(sessionHTML).join(""):`<div class="empty">No journal entries yet.</div>`;
@@ -1058,6 +1149,63 @@ function addEvent(){
  sessions.push(s); document.getElementById("selectedDate").value=s.date; saveSessions(); renderAll();
  eventTitle.value="";eventLocation.value="";eventStart.value="";eventEnd.value="";
 }
+
+function editSession(id){
+ const s = sessions.find(x => String(x.id) === String(id));
+ if(!s) return;
+ document.getElementById("editId").value = s.id;
+ document.getElementById("editDate").value = s.date || "";
+ document.getElementById("editType").value = s.type || "Other";
+ document.getElementById("editStart").value = s.start || "";
+ document.getElementById("editEnd").value = s.end || "";
+ document.getElementById("editTitle").value = s.title || "";
+ document.getElementById("editLocation").value = s.location || "";
+ document.getElementById("editMinutes").value = s.minutes || 0;
+ document.getElementById("editNote").value = s.note || "";
+ document.getElementById("editRecovery").checked = !!s.recovery;
+ document.getElementById("editOverlay").classList.add("open");
+}
+function closeEdit(){
+ document.getElementById("editOverlay").classList.remove("open");
+}
+function saveEdit(){
+ const id = document.getElementById("editId").value;
+ const index = sessions.findIndex(x => String(x.id) === String(id));
+ if(index < 0) return;
+ const current = sessions[index];
+ sessions[index] = {
+  ...current,
+  date: document.getElementById("editDate").value,
+  type: document.getElementById("editType").value,
+  start: document.getElementById("editStart").value || "TBD",
+  end: document.getElementById("editEnd").value,
+  title: document.getElementById("editTitle").value || "Scheduled item",
+  location: document.getElementById("editLocation").value || "TBD",
+  minutes: +document.getElementById("editMinutes").value || 0,
+  note: document.getElementById("editNote").value.trim(),
+  recovery: document.getElementById("editRecovery").checked
+ };
+ saveSessions();
+ closeEdit();
+ document.getElementById("selectedDate").value = sessions[index].date;
+ renderAll();
+}
+function deleteSession(id){
+ const s = sessions.find(x => String(x.id) === String(id));
+ if(!s) return;
+ if(confirm("Delete this item?\\n\\n" + (s.title || "Scheduled item") + " — " + (s.date || ""))){
+  sessions = sessions.filter(x => String(x.id) !== String(id));
+  saveSessions();
+  renderAll();
+ }
+}
+document.addEventListener("keydown", function(e){
+ if(e.key === "Escape") closeEdit();
+});
+document.getElementById("editOverlay")?.addEventListener("click", function(e){
+ if(e.target.id === "editOverlay") closeEdit();
+});
+
 renderAll();
 </script>
 </body>
