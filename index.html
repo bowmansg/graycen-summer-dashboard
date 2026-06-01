@@ -73,6 +73,8 @@
     .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
     .time-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
     .field-label{font-size:12px;font-weight:900;color:#666;text-transform:uppercase;letter-spacing:.05em;margin:4px 0 6px}
+    .calculated-minutes{border:1px solid var(--line);border-radius:16px;padding:12px;background:#f8f8f6;color:#222;font-weight:800;min-height:47px;display:flex;align-items:center}
+    .calculated-minutes.warn{border-color:#f1b1aa;background:#fff3f2;color:#b42318}
     .full{grid-column:1/-1}
     .recovery-check{display:flex;align-items:center;gap:10px;border:1px solid var(--line);background:#f8f8f6;border-radius:16px;padding:12px;font-size:14px;font-weight:700;color:#444}
     .recovery-check input{width:auto;accent-color:var(--ice)}
@@ -310,7 +312,10 @@ Check your schedule, stay on top of the week ahead, and log the work that helps 
           </div>
           <input class="full" id="eventTitle" placeholder="Title" required>
           <input class="full" id="eventLocation" placeholder="Location">
-          <input id="eventMinutes" placeholder="Minutes" value="60">
+          <div class="full">
+            <div class="field-label">Calculated minutes</div>
+            <div id="eventMinutesDisplay" class="calculated-minutes">Choose start and end times</div>
+          </div>
         </div>
         <button class="btn" onclick="addEvent()">Add To Calendar</button>
       </div>
@@ -1269,17 +1274,56 @@ function formatTimeFromParts(hourId, minuteId, ampmId){
  if(!h || !m || !ap) return "";
  return `${h}:${m} ${ap}`;
 }
+function timePartsToMinutes(hourId, minuteId, ampmId){
+ const h=document.getElementById(hourId).value;
+ const m=document.getElementById(minuteId).value;
+ const ap=document.getElementById(ampmId).value;
+ if(!h || !m || !ap) return null;
+ let hour = parseInt(h, 10);
+ const minute = parseInt(m, 10);
+ if(ap === "AM" && hour === 12) hour = 0;
+ if(ap === "PM" && hour !== 12) hour += 12;
+ return hour * 60 + minute;
+}
+function calculateEventMinutes(){
+ const start = timePartsToMinutes("eventStartHour","eventStartMinute","eventStartAmPm");
+ const end = timePartsToMinutes("eventEndHour","eventEndMinute","eventEndAmPm");
+ if(start === null || end === null) return null;
+ return end - start;
+}
+function updateEventMinutesDisplay(){
+ const el=document.getElementById("eventMinutesDisplay");
+ if(!el) return;
+ const minutes=calculateEventMinutes();
+ el.classList.remove("warn");
+ if(minutes === null){ el.textContent="Choose start and end times"; return; }
+ if(minutes <= 0){ el.textContent="End time must be after start time"; el.classList.add("warn"); return; }
+ const hours=Math.floor(minutes/60);
+ const mins=minutes%60;
+ let label = `${minutes} minutes`;
+ if(hours && mins) label += ` (${hours} hr ${mins} min)`;
+ else if(hours) label += ` (${hours} hr)`;
+ if(minutes > 240){ label += " — check AM/PM"; el.classList.add("warn"); }
+ el.textContent=label;
+}
 function clearEventTimeFields(){
  ["eventStartHour","eventStartMinute","eventStartAmPm","eventEndHour","eventEndMinute","eventEndAmPm"].forEach(id=>document.getElementById(id).value="");
+ updateEventMinutesDisplay();
 }
+["eventStartHour","eventStartMinute","eventStartAmPm","eventEndHour","eventEndMinute","eventEndAmPm"].forEach(id=>{
+ document.getElementById(id)?.addEventListener("change", updateEventMinutesDisplay);
+});
 async function addEvent(){
  const startTime=formatTimeFromParts("eventStartHour","eventStartMinute","eventStartAmPm");
  const endTime=formatTimeFromParts("eventEndHour","eventEndMinute","eventEndAmPm");
+ const calculatedMinutes=calculateEventMinutes();
  if(!eventDate.value){ alert("Please choose a date."); return; }
  if(!eventTitle.value.trim()){ alert("Please enter a title."); return; }
  if(!startTime){ alert("Please choose a complete start time, including AM or PM."); return; }
  if(!endTime){ alert("Please choose a complete end time, including AM or PM."); return; }
- let s={id:"event-"+Date.now(),date:eventDate.value,type:eventType.value,start:startTime,end:endTime,title:eventTitle.value.trim(),location:eventLocation.value||"TBD",owner:"Parent",minutes:+eventMinutes.value||0,source:"sheet",addedBy:"Dashboard"};
+ if(calculatedMinutes === null || calculatedMinutes <= 0){ alert("Please choose an end time that is after the start time."); return; }
+ if(calculatedMinutes > 240 && !confirm(`This event is ${calculatedMinutes} minutes long. Please confirm the AM/PM selections are correct.`)){ return; }
+ let s={id:"event-"+Date.now(),date:eventDate.value,type:eventType.value,start:startTime,end:endTime,title:eventTitle.value.trim(),location:eventLocation.value||"TBD",owner:"Parent",minutes:calculatedMinutes,source:"sheet",addedBy:"Dashboard"};
  sessions.push(s); document.getElementById("selectedDate").value=s.date; renderAll();
  try {
   await saveEventToSheet(s);
