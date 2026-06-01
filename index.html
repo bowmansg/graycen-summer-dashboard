@@ -286,7 +286,7 @@ Check your schedule, stay on top of the week ahead, and log the work that helps 
       <div class="card">
         <div class="muted">Parent calendar</div>
         <h2>Add a scheduled item</h2>
-        <p class="muted">Added events save on this device after the page is closed.</p>
+        <p class="muted">Added events save to the shared Google Sheet so family members can see the same updates.</p>
         <div class="form-grid">
           <input type="date" id="eventDate" value="2026-06-01">
           <select id="eventType"><option>Ice</option><option>Strength</option><option>Shooting</option><option>Stickhandling</option><option>Recovery</option><option>Game</option><option>Camp</option><option>Other</option></select>
@@ -306,7 +306,7 @@ Check your schedule, stay on top of the week ahead, and log the work that helps 
   <div class="edit-overlay" id="editOverlay">
     <div class="edit-panel">
       <h2>Edit Item</h2>
-      <p class="modal-help">Update the details below. Changes save on this device/browser.</p>
+      <p class="modal-help">Update the details below. Built-in items can be edited here. Shared Google Sheet items should be corrected in the Sheet if needed.</p>
       <input type="hidden" id="editId">
       <div class="form-grid">
         <input type="date" id="editDate">
@@ -337,6 +337,8 @@ Check your schedule, stay on top of the week ahead, and log the work that helps 
 
 <script>
 const STORAGE_KEY = "graycenSummerDashboardSessions_v1";
+const SHEET_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbw7-sHB4RcEVRg_GYjv_QnkUCi8-SH6X0nryXqqnnzev2fiUFJLrKef5CvIDKts9BotRw/exec";
+let remoteEventsLoaded = false;
 let sessions = [
  {
   "date": "2026-06-01",
@@ -948,15 +950,9 @@ const awayBlocks = [
 
 const baseSessions = JSON.parse(JSON.stringify(sessions));
 function loadSavedSessions(){
- try {
-  const saved = localStorage.getItem(STORAGE_KEY);
-  if(saved){
-   const parsed = JSON.parse(saved);
-   if(Array.isArray(parsed)) sessions = parsed;
-  }
- } catch(e) {
-  console.warn("Could not load saved dashboard data", e);
- }
+ // Shared version: start from the built-in schedule, then add shared Google Sheet events.
+ // We no longer use each browser's localStorage as the source of truth.
+ sessions = JSON.parse(JSON.stringify(baseSessions));
 }
 function saveSessions(){
  try {
@@ -1048,10 +1044,10 @@ function sessionHTML(s){
     <div class="minutes"><b>${s.minutes||0}</b><br><span class="muted">min</span></div>
   </div>
   ${s.note?`<div class="note">${s.note}</div>`:""}
-  <div class="session-actions">
+  ${s.source === "sheet" ? `<div class="note">Shared item. For rare edits/deletes, update the Google Sheet row.</div>` : `<div class="session-actions">
     <button class="mini-btn edit" onclick="event.stopPropagation(); editSession('${editId}')">Edit</button>
     <button class="mini-btn delete" onclick="event.stopPropagation(); deleteSession('${editId}')">Delete</button>
-  </div>
+  </div>`}
 </div>`;
 }
 function awayNoticeHTML(block){
@@ -1136,18 +1132,105 @@ function renderLists(){
  document.getElementById("recentJournal").innerHTML=journal.length?journal.map(sessionHTML).join(""):`<div class="empty">No journal entries yet.</div>`;
  document.getElementById("journalTable").innerHTML=journal.length?`<table class="journal-table"><thead><tr><th>Date</th><th>Type</th><th>Minutes</th><th>Focus</th><th>Note</th></tr></thead><tbody>${journal.map(s=>`<tr><td>${s.date}</td><td>${displayType(s.type)}</td><td>${s.minutes}</td><td>${s.title}</td><td>${s.note||"—"}</td></tr>`).join("")}</tbody></table>`:`<div class="empty">No journal entries yet.</div>`;
 }
-function saveJournal(){
+function buildSheetUrl(params){
+ const query = new URLSearchParams(params);
+ return `${SHEET_WEB_APP_URL}?${query.toString()}`;
+}
+function parseSheetNotes(raw){
+ if(!raw) return {};
+ if(typeof raw !== "string") return {note:String(raw)};
+ try {
+  const parsed = JSON.parse(raw);
+  return parsed && typeof parsed === "object" ? parsed : {note:raw};
+ } catch(e){
+  return {note:raw};
+ }
+}
+function sheetRowToSession(row){
+ const meta = parseSheetNotes(row.notes || "");
+ return {
+  id: row.id || `sheet-${row.date}-${row.title}`,
+  date: row.date || "",
+  type: row.type || "Other",
+  start: row.time || meta.start || "TBD",
+  end: meta.end || "",
+  title: row.title || "Scheduled item",
+  location: meta.location || "Shared Google Sheet",
+  owner: meta.owner || "Parent",
+  minutes: +meta.minutes || 0,
+  note: meta.note || "",
+  recovery: !!meta.recovery,
+  source: "sheet",
+  addedBy: row.addedBy || ""
+ };
+}
+async function loadSharedEvents(){
+ try {
+  const response = await fetch(buildSheetUrl({action:"list", t:Date.now()}), {cache:"no-store"});
+  const data = await response.json();
+  if(!data.ok) throw new Error(data.error || "Could not load shared events");
+  const sheetSessions = (data.events || []).map(sheetRowToSession).filter(s => s.date && s.title);
+  const nonSheetSessions = sessions.filter(s => s.source !== "sheet");
+  const seen = new Set(nonSheetSessions.map(s => String(s.id)));
+  sessions = nonSheetSessions.concat(sheetSessions.filter(s => !seen.has(String(s.id))));
+  remoteEventsLoaded = true;
+  renderAll();
+ } catch(e) {
+  console.warn("Could not load Google Sheet events", e);
+  remoteEventsLoaded = false;
+ }
+}
+async function saveEventToSheet(session){
+ const notes = JSON.stringify({
+  end: session.end || "",
+  location: session.location || "",
+  minutes: session.minutes || 0,
+  owner: session.owner || "Parent",
+  note: session.note || ""
+ });
+ const response = await fetch(buildSheetUrl({
+  action:"add",
+  id: session.id,
+  date: session.date,
+  time: session.start || "TBD",
+  title: session.title || "Scheduled item",
+  type: session.type || "Other",
+  notes,
+  addedBy: session.addedBy || "Dashboard",
+  createdAt: new Date().toISOString()
+ }), {cache:"no-store"});
+ const data = await response.json();
+ if(!data.ok) throw new Error(data.error || "Google Sheet save failed");
+ return data;
+}
+
+async function saveJournal(){
  let date=document.getElementById("logDate").value, type=document.getElementById("logType").value, minutes=+document.getElementById("logMinutes").value||0, focus=document.getElementById("logFocus").value.trim(), note=document.getElementById("logNote").value.trim();
  if(!focus){alert("Add a quick line for what she worked on.");return}
- sessions.push({date,type,start:"Logged",end:"",title:focus,location:"Training journal",owner:"Graycen",minutes,note});
+ const s={id:"journal-"+Date.now(),date,type,start:"Logged",end:"",title:focus,location:"Training journal",owner:"Graycen",minutes,note,source:"sheet",addedBy:"Graycen"};
+ sessions.push(s);
  document.getElementById("selectedDate").value=date;
- document.getElementById("logFocus").value=""; document.getElementById("logNote").value="";
  renderAll();
+ try {
+  await saveEventToSheet(s);
+  await loadSharedEvents();
+  document.getElementById("logFocus").value=""; document.getElementById("logNote").value="";
+ } catch(e) {
+  alert("The journal entry showed on this screen, but it did not save to the shared Google Sheet. Please try again.");
+  console.error(e);
+ }
 }
-function addEvent(){
- let s={date:eventDate.value,type:eventType.value,start:eventStart.value||"TBD",end:eventEnd.value,title:eventTitle.value||"Scheduled item",location:eventLocation.value||"TBD",owner:"Parent",minutes:+eventMinutes.value||0};
- sessions.push(s); document.getElementById("selectedDate").value=s.date; saveSessions(); renderAll();
- eventTitle.value="";eventLocation.value="";eventStart.value="";eventEnd.value="";
+async function addEvent(){
+ let s={id:"event-"+Date.now(),date:eventDate.value,type:eventType.value,start:eventStart.value||"TBD",end:eventEnd.value,title:eventTitle.value||"Scheduled item",location:eventLocation.value||"TBD",owner:"Parent",minutes:+eventMinutes.value||0,source:"sheet",addedBy:"Dashboard"};
+ sessions.push(s); document.getElementById("selectedDate").value=s.date; renderAll();
+ try {
+  await saveEventToSheet(s);
+  await loadSharedEvents();
+  eventTitle.value="";eventLocation.value="";eventStart.value="";eventEnd.value="";
+ } catch(e) {
+  alert("The event showed on this screen, but it did not save to the shared Google Sheet. Please try again.");
+  console.error(e);
+ }
 }
 
 function editSession(id){
@@ -1207,6 +1290,8 @@ document.getElementById("editOverlay")?.addEventListener("click", function(e){
 });
 
 renderAll();
+loadSharedEvents();
+setInterval(loadSharedEvents, 60000);
 </script>
 </body>
 </html>
