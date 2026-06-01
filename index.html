@@ -71,6 +71,8 @@
     input,select,textarea{width:100%;border:1px solid var(--line);border-radius:16px;padding:12px;font-family:inherit;font-size:15px;background:#fff}
     textarea{min-height:90px;resize:vertical}
     .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .time-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+    .field-label{font-size:12px;font-weight:900;color:#666;text-transform:uppercase;letter-spacing:.05em;margin:4px 0 6px}
     .full{grid-column:1/-1}
     .recovery-check{display:flex;align-items:center;gap:10px;border:1px solid var(--line);background:#f8f8f6;border-radius:16px;padding:12px;font-size:14px;font-weight:700;color:#444}
     .recovery-check input{width:auto;accent-color:var(--ice)}
@@ -288,11 +290,25 @@ Check your schedule, stay on top of the week ahead, and log the work that helps 
         <h2>Add a scheduled item</h2>
         <p class="muted">Added events save to the shared Google Sheet so family members can see the same updates.</p>
         <div class="form-grid">
-          <input type="date" id="eventDate" value="2026-06-01">
-          <select id="eventType"><option>Ice</option><option>Strength</option><option>Shooting</option><option>Stickhandling</option><option>Recovery</option><option>Game</option><option>Camp</option><option>Other</option></select>
-          <input id="eventStart" placeholder="Start time">
-          <input id="eventEnd" placeholder="End time">
-          <input class="full" id="eventTitle" placeholder="Title">
+          <input type="date" id="eventDate" value="2026-06-01" required>
+          <select id="eventType" required><option>Ice</option><option>Strength</option><option>Shooting</option><option>Stickhandling</option><option>Recovery</option><option>Game</option><option>Camp</option><option>Other</option></select>
+          <div>
+            <div class="field-label">Start time</div>
+            <div class="time-row">
+              <select id="eventStartHour" required><option value="">Hour</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>9</option><option>10</option><option>11</option><option>12</option></select>
+              <select id="eventStartMinute" required><option value="">Min</option><option value="00">00</option><option value="15">15</option><option value="30">30</option><option value="45">45</option></select>
+              <select id="eventStartAmPm" required><option value="">AM/PM</option><option>AM</option><option>PM</option></select>
+            </div>
+          </div>
+          <div>
+            <div class="field-label">End time</div>
+            <div class="time-row">
+              <select id="eventEndHour" required><option value="">Hour</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>9</option><option>10</option><option>11</option><option>12</option></select>
+              <select id="eventEndMinute" required><option value="">Min</option><option value="00">00</option><option value="15">15</option><option value="30">30</option><option value="45">45</option></select>
+              <select id="eventEndAmPm" required><option value="">AM/PM</option><option>AM</option><option>PM</option></select>
+            </div>
+          </div>
+          <input class="full" id="eventTitle" placeholder="Title" required>
           <input class="full" id="eventLocation" placeholder="Location">
           <input id="eventMinutes" placeholder="Minutes" value="60">
         </div>
@@ -1246,13 +1262,29 @@ async function saveJournal(){
   console.error(e);
  }
 }
+function formatTimeFromParts(hourId, minuteId, ampmId){
+ const h=document.getElementById(hourId).value;
+ const m=document.getElementById(minuteId).value;
+ const ap=document.getElementById(ampmId).value;
+ if(!h || !m || !ap) return "";
+ return `${h}:${m} ${ap}`;
+}
+function clearEventTimeFields(){
+ ["eventStartHour","eventStartMinute","eventStartAmPm","eventEndHour","eventEndMinute","eventEndAmPm"].forEach(id=>document.getElementById(id).value="");
+}
 async function addEvent(){
- let s={id:"event-"+Date.now(),date:eventDate.value,type:eventType.value,start:eventStart.value||"TBD",end:eventEnd.value,title:eventTitle.value||"Scheduled item",location:eventLocation.value||"TBD",owner:"Parent",minutes:+eventMinutes.value||0,source:"sheet",addedBy:"Dashboard"};
+ const startTime=formatTimeFromParts("eventStartHour","eventStartMinute","eventStartAmPm");
+ const endTime=formatTimeFromParts("eventEndHour","eventEndMinute","eventEndAmPm");
+ if(!eventDate.value){ alert("Please choose a date."); return; }
+ if(!eventTitle.value.trim()){ alert("Please enter a title."); return; }
+ if(!startTime){ alert("Please choose a complete start time, including AM or PM."); return; }
+ if(!endTime){ alert("Please choose a complete end time, including AM or PM."); return; }
+ let s={id:"event-"+Date.now(),date:eventDate.value,type:eventType.value,start:startTime,end:endTime,title:eventTitle.value.trim(),location:eventLocation.value||"TBD",owner:"Parent",minutes:+eventMinutes.value||0,source:"sheet",addedBy:"Dashboard"};
  sessions.push(s); document.getElementById("selectedDate").value=s.date; renderAll();
  try {
   await saveEventToSheet(s);
   await loadSharedEvents();
-  eventTitle.value="";eventLocation.value="";eventStart.value="";eventEnd.value="";
+  eventTitle.value="";eventLocation.value="";clearEventTimeFields();
  } catch(e) {
   alert("The event showed on this screen, but it did not save to the shared Google Sheet. Please try again.");
   console.error(e);
