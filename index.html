@@ -1146,14 +1146,40 @@ function parseSheetNotes(raw){
   return {note:raw};
  }
 }
+function normalizeSheetDate(value){
+ if(!value) return "";
+ const text = String(value).trim();
+ const isoMatch = text.match(/^(\d{4}-\d{2}-\d{2})/);
+ if(isoMatch) return isoMatch[1];
+ const parsed = new Date(text);
+ if(!isNaN(parsed.getTime())){
+  const year = parsed.getFullYear();
+  const month = String(parsed.getMonth()+1).padStart(2,"0");
+  const day = String(parsed.getDate()).padStart(2,"0");
+  return `${year}-${month}-${day}`;
+ }
+ return text;
+}
+function normalizeSheetTime(value, fallback="TBD"){
+ if(!value) return fallback;
+ const text = String(value).trim();
+ if(/^\d{1,2}:\d{2}\s*(AM|PM)$/i.test(text)) return text.toUpperCase();
+ const parsed = new Date(text);
+ if(!isNaN(parsed.getTime())){
+  return parsed.toLocaleTimeString("en-US", {hour:"numeric", minute:"2-digit"});
+ }
+ return text;
+}
 function sheetRowToSession(row){
  const meta = parseSheetNotes(row.notes || "");
+ const normalizedDate = normalizeSheetDate(row.date || meta.date || "");
+ const normalizedStart = normalizeSheetTime(row.time || meta.start || "", "TBD");
  return {
-  id: row.id || `sheet-${row.date}-${row.title}`,
-  date: row.date || "",
+  id: row.id || `sheet-${normalizedDate}-${row.title}`,
+  date: normalizedDate,
   type: row.type || "Other",
-  start: row.time || meta.start || "TBD",
-  end: meta.end || "",
+  start: normalizedStart,
+  end: normalizeSheetTime(meta.end || "", ""),
   title: row.title || "Scheduled item",
   location: meta.location || "Shared Google Sheet",
   owner: meta.owner || "Parent",
