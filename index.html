@@ -1439,5 +1439,94 @@ setInterval(loadSharedEvents, 60000);
   }
 })();
 </script>
+  <script>
+(function fixNextScheduledSessionCard() {
+  function localSessionDateTime(session) {
+    if (!session || !session.date) return null;
+
+    const dateParts = String(session.date).split("-").map(Number);
+    if (dateParts.length !== 3 || dateParts.some(Number.isNaN)) return null;
+
+    let hour = 0;
+    let minute = 0;
+
+    const rawTime = String(session.start || "").trim().toUpperCase();
+
+    if (
+      rawTime &&
+      rawTime !== "ALL DAY" &&
+      rawTime !== "TBD" &&
+      rawTime !== "LOGGED"
+    ) {
+      const match = rawTime.match(/^(\d{1,2})(?::(\d{2}))?\s*(AM|PM)$/);
+
+      if (match) {
+        hour = parseInt(match[1], 10);
+        minute = parseInt(match[2] || "0", 10);
+
+        if (match[3] === "AM" && hour === 12) hour = 0;
+        if (match[3] === "PM" && hour !== 12) hour += 12;
+      }
+    }
+
+    return new Date(
+      dateParts[0],
+      dateParts[1] - 1,
+      dateParts[2],
+      hour,
+      minute,
+      0,
+      0
+    );
+  }
+
+  function renderCorrectNextSession() {
+    if (!Array.isArray(window.sessions)) return;
+
+    const now = new Date();
+
+    const next = window.sessions
+      .filter(session => session.owner === "Parent")
+      .map(session => ({
+        ...session,
+        startDateTime: localSessionDateTime(session)
+      }))
+      .filter(session => session.startDateTime && session.startDateTime > now)
+      .sort((a, b) => a.startDateTime - b.startDateTime)[0];
+
+    const titleEl = document.getElementById("nextTitle");
+    const metaEl = document.getElementById("nextMeta");
+
+    if (!titleEl || !metaEl) return;
+
+    if (!next) {
+      titleEl.textContent = "—";
+      metaEl.textContent = "No upcoming sessions";
+      return;
+    }
+
+    titleEl.textContent = next.title || "Scheduled item";
+
+    const dateLabel = next.startDateTime.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric"
+    });
+
+    metaEl.textContent = `${dateLabel} · ${next.start || ""} · ${next.location || ""}`;
+  }
+
+  const originalRenderAll = window.renderAll;
+
+  window.renderAll = function patchedRenderAll() {
+    if (typeof originalRenderAll === "function") {
+      originalRenderAll.apply(this, arguments);
+    }
+
+    renderCorrectNextSession();
+  };
+
+  renderCorrectNextSession();
+})();
+</script>
 </body>
 </html>
