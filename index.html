@@ -1395,5 +1395,49 @@ renderAll();
 loadSharedEvents();
 setInterval(loadSharedEvents, 60000);
 </script>
+<script>
+(function defaultDashboardToToday() {
+  function localDateKey(date = new Date()) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  }
+
+  function applyTodayAsDefault() {
+    const today = localDateKey();
+
+    const selectedDate = document.getElementById("selectedDate");
+    const logDate = document.getElementById("logDate");
+    const eventDate = document.getElementById("eventDate");
+
+    if (selectedDate) selectedDate.value = today;
+    if (logDate) logDate.value = today;
+    if (eventDate) eventDate.value = today;
+
+    try {
+      if (typeof parseDate === "function") {
+        displayMonth = parseDate(today);
+      }
+
+      if (typeof startOfWeek === "function" && typeof parseDate === "function") {
+        weekStart = startOfWeek(parseDate(today));
+      }
+
+      if (typeof renderAll === "function") {
+        renderAll();
+      }
+    } catch (e) {
+      console.warn("Could not apply today's default date:", e);
+    }
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", applyTodayAsDefault);
+  } else {
+    applyTodayAsDefault();
+  }
+})();
+</script>
 </body>
 </html>
