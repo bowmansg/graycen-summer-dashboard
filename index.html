@@ -11,8 +11,8 @@
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
   <title>Graycen Summer Training Dashboard</title>
-  <link rel="apple-touch-icon" href="apple-touch-icon.png?v=mission-icon-2">
-  <link rel="icon" type="image/png" href="apple-touch-icon.png?v=mission-icon-2">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png?v=mission-icon-3">
+  <link rel="icon" type="image/png" href="apple-touch-icon.png?v=mission-icon-3">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -146,6 +146,7 @@
     .week-day{border:1px solid var(--line);border-radius:18px;background:#fff;padding:10px;min-height:260px}
     .week-day h3{font-size:14px;margin:0 0 8px;line-height:1.2}
     .week-day .event{border-radius:13px;padding:8px;border-left-width:5px;margin-bottom:7px}
+    .week-day .event.compact-away{min-height:auto;background:linear-gradient(90deg,var(--away-soft),#fff 42%)}
     .week-day .event .title{font-size:12px}.week-day .event .meta,.week-day .event .time{font-size:11px}
     .journal-table{width:100%;border-collapse:collapse;font-size:13px}
     .journal-table th,.journal-table td{text-align:left;border-bottom:1px solid var(--line);padding:9px 6px;vertical-align:top}
@@ -441,7 +442,7 @@
 <script>
 'use strict';
 
-const DASHBOARD_VERSION = 'graycen-visual-align-2026-06-07-v1';
+const DASHBOARD_VERSION = 'graycen-final-icon-week-no-wisconsin-2026-06-07-v2';
 const STORAGE_KEY = 'graycenSummerDashboardSessions_recovery_v1';
 const JOURNAL_KEY = 'graycenSummerDashboardJournal_timefix_v5';
 const VERSION_KEY = 'graycenSummerDashboardVersion';
@@ -508,7 +509,6 @@ const awayBlocks = [
   {start:'2026-06-10', end:'2026-06-10', event:'Chicago / Rochester travel', city:'Chicago / Rochester', limited:true},
   {start:'2026-06-11', end:'2026-06-14', event:'PIP - Rochester', city:'Rochester', limited:true},
   {start:'2026-06-15', end:'2026-06-18', event:'Central District', city:'Away', limited:true},
-  {start:'2026-06-21', end:'2026-06-23', event:'Wisconsin', city:'Wisconsin', limited:true},
   {start:'2026-06-24', end:'2026-06-28', event:'Cwench', city:'Away', limited:true},
   {start:'2026-07-04', end:'2026-07-11', event:'Costa Rica', city:'Costa Rica', limited:true},
   {start:'2026-07-19', end:'2026-07-24', event:'Natty Camp', city:'Away', limited:true},
@@ -897,8 +897,14 @@ document.addEventListener('keydown', function(event){
 function awayNoticeHTML(iso, compact=false){
   const b=getAwayBlock(iso);
   if(!b) return '';
-  const label = compact ? (b.event || b.city || 'Away') : `Away / limited training: ${b.event}${b.tentative?' (tentative)':''}`;
-  return `<div class="away-notice">${escapeHTML(label)}</div>`;
+  const label = b.event || b.city || 'Away';
+  if(compact){
+    return `<div class="event away compact-away" role="button" tabindex="0" onclick="setSelectedDate('${iso}');showView('day')">
+      <div class="top"><div class="title">${escapeHTML(label)}</div><div class="time">All Day</div></div>
+      <div class="meta">Away${b.city ? ' · '+escapeHTML(b.city) : ''}${b.tentative ? ' · tentative' : ''}</div>
+    </div>`;
+  }
+  return `<div class="away-notice">Away / limited training: ${escapeHTML(label)}${b.tentative?' (tentative)':''}</div>`;
 }
 
 function setSelectedDate(iso){
