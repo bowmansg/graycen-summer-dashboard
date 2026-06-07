@@ -61,6 +61,7 @@
     .hero-main{display:flex;gap:18px;align-items:center}
     .logo-box{width:110px;height:100px;border-radius:24px;background:rgba(255,255,255,.92);display:flex;align-items:center;justify-content:center;padding:10px;box-shadow:0 10px 30px rgba(0,0,0,.12);flex:0 0 auto}
     .logo-fallback{width:78px;height:78px;border-radius:22px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#113d2a,#39ff14);color:white;font-weight:900;font-size:42px;letter-spacing:-2px}
+    .mission-logo{width:92px;height:92px;object-fit:contain;display:block}
     .eyebrow{display:inline-flex;background:rgba(57,255,20,.17);border:1px solid rgba(57,255,20,.36);border-radius:999px;padding:6px 12px;font-size:13px;font-weight:900;margin-bottom:12px;color:#ecffe8}
     h1{font-size:43px;line-height:.98;margin:0;font-weight:900;letter-spacing:-1.5px}
     .hero-lead{color:#efece8;line-height:1.45;margin:16px 0 0;font-size:18px;font-weight:650;max-width:840px}
@@ -143,7 +144,7 @@
     .status{font-size:12px;color:var(--muted);font-weight:800;margin-top:8px}
     @media(max-width:860px){
       .wrap{padding:12px}
-      .hero{padding:18px;border-radius:26px}.hero-main{gap:12px}.logo-box{width:78px;height:72px;border-radius:18px}.logo-fallback{width:56px;height:56px;border-radius:16px;font-size:30px}
+      .hero{padding:18px;border-radius:26px}.hero-main{gap:12px}.logo-box{width:78px;height:72px;border-radius:18px}.logo-fallback{width:56px;height:56px;border-radius:16px;font-size:30px}.mission-logo{width:64px;height:64px}
       h1{font-size:33px}.eyebrow{font-size:11px;margin-bottom:8px}.hero-lead{font-size:14px}.hero-tools{gap:6px}.hero-tool{padding:8px 7px;border-radius:13px}.hero-tool span{font-size:9px}.hero-tool strong{font-size:10px}
       .tabs{grid-template-columns:repeat(4,1fr);gap:5px;border-radius:18px}.tab{font-size:12px;padding:10px 4px}
       .section,.form-grid{grid-template-columns:1fr}.quick{grid-template-columns:repeat(2,1fr)}.calendar{gap:4px}.day{min-height:92px;border-radius:12px;padding:5px}.day-chip{font-size:7.8px;padding:3px 4px}.dow{font-size:10px}.card{padding:15px}.week-grid{grid-template-columns:1fr}.week-day{min-height:unset}
@@ -156,7 +157,7 @@
     <header class="hero">
       <div class="hero-inner">
         <div class="hero-main">
-          <div class="logo-box"><div class="logo-fallback">G</div></div>
+          <div class="logo-box"><img class="mission-logo" src="https://chicagomission.com/wp-content/uploads/2026/05/Mission_Logo_2026-150x150-1.png" alt="Chicago Mission logo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';"><div class="logo-fallback" style="display:none">G</div></div>
           <div>
             <div class="eyebrow">Graycen</div>
             <h1>Summer<br>Training</h1>
@@ -386,8 +387,8 @@
 <script>
 'use strict';
 
-const DASHBOARD_VERSION = 'graycen-timefix-2026-06-06-v5';
-const STORAGE_KEY = 'graycenSummerDashboardSessions_timefix_v5';
+const DASHBOARD_VERSION = 'graycen-recovery-2026-06-07-v1';
+const STORAGE_KEY = 'graycenSummerDashboardSessions_recovery_v1';
 const JOURNAL_KEY = 'graycenSummerDashboardJournal_timefix_v5';
 const VERSION_KEY = 'graycenSummerDashboardVersion';
 const SHEET_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbw7-sHB4RcEVRg_GYjv_QnkUCi8-SH6X0nryXqqnnzev2fiUFJLrKef5CvIDKts9BotRw/exec';
@@ -397,8 +398,11 @@ const SHEET_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbw7-sHB4RcEVR
 try {
   const oldVersion = localStorage.getItem(VERSION_KEY);
   if (oldVersion !== DASHBOARD_VERSION) {
-    localStorage.removeItem('graycenSummerDashboardSessions_v1');
-    localStorage.removeItem('graycenSummerDashboardSessions_v2');
+    // Clear only locally added schedule items from prior test builds.
+    // Keep journal entries intact.
+    Object.keys(localStorage).forEach(key => {
+      if (key.indexOf('graycenSummerDashboardSessions') === 0) localStorage.removeItem(key);
+    });
     localStorage.setItem(VERSION_KEY, DASHBOARD_VERSION);
   }
 } catch (e) { console.warn('Version storage skipped', e); }
@@ -476,7 +480,9 @@ function buildHomeSkills(){
   return items;
 }
 
-let sessions = [...baseSessions, ...buildHomeSkills()].map(normalizeEvent);
+const rawHomeSkills = buildHomeSkills();
+const builtInSchedule = [...baseSessions, ...rawHomeSkills];
+let sessions = builtInSchedule.map(row => normalizeEvent({...row, builtIn:true}));
 let remoteEvents = [];
 let localAddedEvents = loadLocalAddedEvents();
 let journals = loadJournals();
@@ -637,20 +643,44 @@ function rowPick(row, names){
 }
 function cleanTextValue(value){
   if(value === null || value === undefined) return '';
-  return String(value).trim();
+  let text = String(value).trim();
+  // Some early test saves accidentally stored a whole event object inside the notes field.
+  // Never show that raw JSON in the dashboard.
+  if((text.startsWith('{') && text.endsWith('}')) || (text.startsWith('[') && text.endsWith(']'))){
+    return '';
+  }
+  return text;
 }
 function eventSemanticKey(e){
   return [e.date, normalizeType(e.type).toLowerCase(), String(e.title||'').trim().toLowerCase()].join('|');
+}
+function isDuplicateAwayEvent(e){
+  const block = getAwayBlock(e.date);
+  if(!block) return false;
+  const title = String(e.title || '').trim().toLowerCase();
+  const loc = String(e.location || '').trim().toLowerCase();
+  const typ = normalizeType(e.type);
+  const blockTitle = String(block.event || '').trim().toLowerCase();
+  return typ === 'Away' || title === blockTitle || (title && blockTitle && (title.includes(blockTitle) || blockTitle.includes(title))) || loc === 'away';
+}
+function eventQuality(e){
+  let score = 0;
+  if(timeToMinutes(e.start) !== null) score += 10;
+  if(timeToMinutes(e.end) !== null || !e.end) score += 3;
+  if(e.location) score += 2;
+  if(e.minutes) score += 1;
+  if(e.builtIn || e.generated) score += 5;
+  return score;
 }
 function findBuiltInMatch(e){
   const wantedTitle = String(e.title || '').trim().toLowerCase();
   const wantedType = normalizeType(e.type).toLowerCase();
   if(!wantedTitle) return null;
-  return baseSessions.find(b => {
+  return builtInSchedule.find(b => {
     return b.date === e.date &&
       String(b.title || '').trim().toLowerCase() === wantedTitle &&
       normalizeType(b.type).toLowerCase() === wantedType;
-  }) || baseSessions.find(b => {
+  }) || builtInSchedule.find(b => {
     return b.date === e.date && String(b.title || '').trim().toLowerCase() === wantedTitle;
   }) || null;
 }
@@ -681,7 +711,8 @@ function normalizeEvent(row){
     minutes,
     notes: cleanTextValue(rowPick(row, ['notes','note','Notes','Note'])),
     remote: !!row.remote,
-    generated: !!row.generated
+    generated: !!row.generated,
+    builtIn: !!row.builtIn
   };
 
   // If the shared Sheet sends a duplicate built-in item with blank or damaged time fields,
@@ -704,18 +735,19 @@ function makeEventId(date,start,title){
   return `${date}|${String(start).trim()}|${String(title).trim()}`.toLowerCase().replace(/[^a-z0-9|]+/g,'-');
 }
 function allSessions(){
-  const map=new Map();
-  const semanticTimed = new Map();
-  [...sessions, ...remoteEvents, ...localAddedEvents].map(normalizeEvent).forEach(e=>{
-    const sem = eventSemanticKey(e);
-    const existingTimedKey = semanticTimed.get(sem);
-    const hasGoodTime = timeToMinutes(e.start) !== null;
-    if(existingTimedKey && !hasGoodTime) return;
-    const key=e.id || makeEventId(e.date,e.start,e.title);
-    if(!map.has(key)) map.set(key,e);
-    if(hasGoodTime && !semanticTimed.has(sem)) semanticTimed.set(sem,key);
-  });
-  return [...map.values()].sort(compareEvents);
+  const bestBySemantic = new Map();
+  [...sessions, ...remoteEvents, ...localAddedEvents]
+    .map(normalizeEvent)
+    .filter(e => e && e.date && e.title)
+    .filter(e => !isDuplicateAwayEvent(e))
+    .forEach(e=>{
+      const sem = eventSemanticKey(e);
+      const existing = bestBySemantic.get(sem);
+      if(!existing || eventQuality(e) > eventQuality(existing)){
+        bestBySemantic.set(sem, e);
+      }
+    });
+  return [...bestBySemantic.values()].sort(compareEvents);
 }
 function compareEvents(a,b){
   if(a.date !== b.date) return a.date.localeCompare(b.date);
@@ -911,7 +943,7 @@ async function loadRemoteEvents(){
     const res=await fetch(`${SHEET_WEB_APP_URL}?action=list&v=${Date.now()}`, {cache:'no-store'});
     const data=await res.json();
     const rows = Array.isArray(data) ? data : (data.events || data.data || data.rows || []);
-    remoteEvents = rows.map(r=>normalizeEvent({...r, remote:true}));
+    remoteEvents = rows.map(r=>normalizeEvent({...r, remote:true})).filter(e => !isDuplicateAwayEvent(e));
     status.textContent = remoteEvents.length ? `Shared schedule loaded: ${remoteEvents.length} item(s).` : 'Shared schedule connected. No added Sheet items found.';
   }catch(e){
     console.warn('Shared schedule load failed', e);
