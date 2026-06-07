@@ -673,6 +673,22 @@ function cleanTextValue(value){
   }
   return text;
 }
+function parseNotesObject(value){
+  if(value === null || value === undefined) return {};
+  if(typeof value === 'object' && !Array.isArray(value)) return value;
+  const text = String(value).trim();
+  if(!text || !text.startsWith('{')) return {};
+  try {
+    const parsed = JSON.parse(text);
+    return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {};
+  } catch(e) {
+    return {};
+  }
+}
+function noteTextValue(rawNotes, meta){
+  if(meta && meta.note) return String(meta.note).trim();
+  return cleanTextValue(rawNotes);
+}
 function eventSemanticKey(e){
   return [e.date, normalizeType(e.type).toLowerCase(), String(e.title||'').trim().toLowerCase()].join('|');
 }
@@ -712,14 +728,17 @@ function normalizeEvent(row){
   const rawDate = rowPick(row, ['date','Date','startDate','Start Date','day','Day']);
   const rawTitle = rowPick(row, ['title','Title','name','Name','event','Event','activity','Activity']);
   const rawType = rowPick(row, ['type','Type','category','Category','eventType','Event Type']);
+  const rawNotes = rowPick(row, ['notes','note','Notes','Note']);
+  const notesMeta = parseNotesObject(rawNotes);
   const dateObj=parseLocalDate(rawDate);
   const date=dateObj ? toISODate(dateObj) : todayLocalISO();
   const type=normalizeType(rawType || rawTitle || 'Other');
   let start=rowPick(row, ['start','Start','startTime','StartTime','Start Time','start_time','time','Time','begin','Begin','beginTime','Begin Time']);
-  let end=rowPick(row, ['end','End','endTime','EndTime','End Time','end_time','finish','Finish','finishTime','Finish Time']);
-  let location=rowPick(row, ['location','Location','place','Place','venue','Venue','rink','Rink']);
-  let title=cleanTextValue(rawTitle) || typeInfo[type]?.label || type;
-  let minutes=Number(rowPick(row, ['minutes','Minutes','duration','Duration','mins','Mins']) || calcMinutes(start,end) || 0);
+  let end=rowPick(row, ['end','End','endTime','EndTime','End Time','end_time','finish','Finish','finishTime','Finish Time']) || notesMeta.end || '';
+  let location=rowPick(row, ['location','Location','place','Place','venue','Venue','rink','Rink']) || notesMeta.location || '';
+  let title=cleanTextValue(rawTitle) || notesMeta.focus || typeInfo[type]?.label || type;
+  let minutes=Number(rowPick(row, ['minutes','Minutes','duration','Duration','mins','Mins']) || notesMeta.minutes || calcMinutes(start,end) || 0);
+  let owner=cleanTextValue(rowPick(row, ['owner','Owner','addedBy','AddedBy','Added By'])) || cleanTextValue(notesMeta.owner) || 'Parent';
 
   let event = {
     id: cleanTextValue(rowPick(row, ['id','ID','eventId','Event ID'])),
@@ -729,9 +748,10 @@ function normalizeEvent(row){
     end: cleanTextValue(end),
     title,
     location: cleanTextValue(location),
-    owner: cleanTextValue(rowPick(row, ['owner','Owner','addedBy','AddedBy','Added By'])) || 'Parent',
+    owner,
     minutes,
-    notes: cleanTextValue(rowPick(row, ['notes','note','Notes','Note'])),
+    notes: noteTextValue(rawNotes, notesMeta),
+    recovery: !!notesMeta.recovery,
     remote: !!row.remote,
     generated: !!row.generated,
     builtIn: !!row.builtIn
@@ -955,8 +975,9 @@ function renderTotals(){
   document.getElementById('scheduledStrengthHome').textContent=count('Strength');
   document.getElementById('scheduledShootingHome').textContent=count('Shooting');
   document.getElementById('scheduledStickHome').textContent=count('Stickhandling');
-  document.getElementById('loggedMinutes').textContent=journals.reduce((sum,j)=>sum+Number(j.minutes||0),0);
-  document.getElementById('journalEntries').textContent=journals.length;
+  const allJournalEntries=combinedJournals();
+  document.getElementById('loggedMinutes').textContent=allJournalEntries.reduce((sum,j)=>sum+Number(j.minutes||0),0);
+  document.getElementById('journalEntries').textContent=allJournalEntries.length;
   let awayDays=0; awayBlocks.forEach(b=>{awayDays += Math.floor((parseLocalDate(b.end)-parseLocalDate(b.start))/(24*60*60*1000))+1;});
   document.getElementById('awayDays').textContent=awayDays;
   document.getElementById('homeSkills').textContent=count('Shooting')+count('Stickhandling');
@@ -971,18 +992,50 @@ function loadJournals(){
   try { return JSON.parse(localStorage.getItem(JOURNAL_KEY) || '[]'); } catch { return []; }
 }
 function saveJournals(){try{localStorage.setItem(JOURNAL_KEY, JSON.stringify(journals));}catch(e){alert('This browser could not save the journal entry.')}}
+function isJournalEvent(e){
+  const owner=String(e.owner || '').toLowerCase();
+  const start=String(e.start || '').toLowerCase();
+  const loc=String(e.location || '').toLowerCase();
+  return owner === 'graycen' || start === 'logged' || loc.includes('training journal');
+}
+function sheetEventToJournal(e){
+  return {
+    id:e.id || makeEventId(e.date,e.start,e.title),
+    date:e.date,
+    type:typeLabel(e.type),
+    minutes:Number(e.minutes || 0),
+    recovery:!!e.recovery || normalizeType(e.type)==='Recovery',
+    note:e.notes || e.title || '',
+    createdAt:e.createdAt || '',
+    source:e.remote ? 'sheet' : 'local'
+  };
+}
+function combinedJournals(){
+  const fromSheet = remoteEvents.map(normalizeEvent).filter(isJournalEvent).map(sheetEventToJournal);
+  const fromLocal = journals.map(j=>({...j, source:'local'}));
+  const byId = new Map();
+  [...fromSheet, ...fromLocal].forEach(j=>{
+    const key = String(j.id || `${j.date}|${j.type}|${j.minutes}|${j.note}`);
+    if(!byId.has(key)) byId.set(key,j);
+  });
+  return [...byId.values()].sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')) || String(b.createdAt||'').localeCompare(String(a.createdAt||'')));
+}
 function saveJournalEntry(){
+  const note=document.getElementById('journalNote').value.trim();
   const entry={
-    id:'j-'+Date.now(), date:document.getElementById('journalDate').value || selectedDate,
+    id:'journal-'+Date.now(), date:document.getElementById('journalDate').value || selectedDate,
     type:document.getElementById('journalType').value, minutes:Number(document.getElementById('journalMinutes').value || 0),
-    recovery:document.getElementById('journalRecovery').checked, note:document.getElementById('journalNote').value.trim(), createdAt:new Date().toISOString()
+    recovery:document.getElementById('journalRecovery').checked, note, createdAt:new Date().toISOString()
   };
   journals.unshift(entry); saveJournals();
+  const sheetEvent=normalizeEvent({id:entry.id, date:entry.date, type:entry.type, start:'Logged', end:'', title:note || entry.type, location:'Training journal', owner:'Graycen', minutes:entry.minutes, notes:JSON.stringify({owner:'Graycen', note:note, recovery:entry.recovery, minutes:entry.minutes})});
+  postEventToSheet(sheetEvent).then(()=>loadRemoteEvents());
   document.getElementById('journalMinutes').value=''; document.getElementById('journalNote').value=''; document.getElementById('journalRecovery').checked=false;
   renderAll(); alert('Journal entry saved.');
 }
 function renderJournals(){
-  const rows=journals.slice(0,25).map(j=>`<tr><td>${escapeHTML(formatDateHuman(j.date))}</td><td>${escapeHTML(j.type)}</td><td>${Number(j.minutes||0)}</td><td>${j.recovery?'Yes':'—'}</td><td>${escapeHTML(j.note)}</td></tr>`).join('');
+  const allJournals=combinedJournals();
+  const rows=allJournals.slice(0,25).map(j=>`<tr><td>${escapeHTML(formatDateHuman(j.date))}</td><td>${escapeHTML(j.type)}</td><td>${Number(j.minutes||0)}</td><td>${j.recovery?'Yes':'—'}</td><td>${escapeHTML(j.note)}</td></tr>`).join('');
   const html=rows ? `<table class="journal-table"><thead><tr><th>Date</th><th>Type</th><th>Min</th><th>Recovery</th><th>Note</th></tr></thead><tbody>${rows}</tbody></table>` : '<div class="empty">No journal entries yet.</div>';
   document.getElementById('journalHistory').innerHTML=html;
   document.getElementById('journalHistorySummary').innerHTML=html;
@@ -1019,7 +1072,7 @@ async function postEventToSheet(e){
   payload.set('type',e.type);
   payload.set('location',e.location || '');
   payload.set('notes',e.notes || '');
-  payload.set('addedBy','Parent');
+  payload.set('addedBy',e.owner || 'Parent');
   payload.set('minutes',String(e.minutes || 0));
   payload.set('createdAt',new Date().toISOString());
   try{
