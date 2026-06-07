@@ -386,9 +386,9 @@
 <script>
 'use strict';
 
-const DASHBOARD_VERSION = 'graycen-timefix-2026-06-06-v3';
-const STORAGE_KEY = 'graycenSummerDashboardSessions_timefix_v3';
-const JOURNAL_KEY = 'graycenSummerDashboardJournal_timefix_v3';
+const DASHBOARD_VERSION = 'graycen-timefix-2026-06-06-v4';
+const STORAGE_KEY = 'graycenSummerDashboardSessions_timefix_v4';
+const JOURNAL_KEY = 'graycenSummerDashboardJournal_timefix_v4';
 const VERSION_KEY = 'graycenSummerDashboardVersion';
 const SHEET_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbw7-sHB4RcEVRg_GYjv_QnkUCi8-SH6X0nryXqqnnzev2fiUFJLrKef5CvIDKts9BotRw/exec';
 
@@ -530,24 +530,51 @@ function startOfWeek(date){
 
 function timeToMinutes(value){
   if(value === null || value === undefined) return null;
+  if(value instanceof Date && !Number.isNaN(value.getTime())) return value.getHours()*60 + value.getMinutes();
   if(typeof value === 'number'){
     if(value >= 0 && value < 1) return Math.round(value*24*60);
+    if(value > 1 && value < 100000){
+      const fraction = value - Math.floor(value);
+      return Math.round(fraction*24*60);
+    }
     return Math.round(value);
   }
-  let s = String(value).trim().toUpperCase();
+  let s = String(value).trim();
   if(!s) return null;
-  if(s === 'ALL DAY' || s === 'ALLDAY') return -1;
+  const upper = s.toUpperCase();
+  if(upper === 'ALL DAY' || upper === 'ALLDAY') return -1;
   const numeric = Number(s);
-  if(Number.isFinite(numeric) && numeric >= 0 && numeric < 1) return Math.round(numeric*24*60);
-  let m = s.match(/^(\d{1,2})(?::(\d{2}))?\s*(AM|PM)$/);
+  if(Number.isFinite(numeric)){
+    if(numeric >= 0 && numeric < 1) return Math.round(numeric*24*60);
+    if(numeric > 1 && numeric < 100000){
+      const fraction = numeric - Math.floor(numeric);
+      return Math.round(fraction*24*60);
+    }
+  }
+
+  // Common display values: 9:30 AM, 12 PM, 17:45, 11:30:00
+  let m = upper.match(/^(\d{1,2})(?::(\d{2}))?\s*(AM|PM)$/);
   if(m){
     let h=Number(m[1]); const min=Number(m[2] || 0); const ap=m[3];
     if(ap==='AM' && h===12) h=0;
     if(ap==='PM' && h!==12) h+=12;
     return h*60+min;
   }
-  m = s.match(/^(\d{1,2}):(\d{2})$/);
+  m = upper.match(/^(\d{1,2}):(\d{2})(?::\d{2})?$/);
   if(m) return Number(m[1])*60 + Number(m[2]);
+
+  // Google Sheets sometimes returns time-only cells as Dec 30 1899 date/time strings.
+  // Extract the time manually instead of letting Safari/Home Screen reinterpret it.
+  m = s.match(/(?:1899|1900)[^T
+]*T(\d{2}):(\d{2})/i);
+  if(m){
+    let mins = Number(m[1])*60 + Number(m[2]);
+    if(/Z\s*$/i.test(s)) mins = (mins - 360 + 1440) % 1440; // Sheet time-only UTC serialization from Central time.
+    return mins;
+  }
+  m = s.match(/(?:1899|1900).*?(\d{1,2}):(\d{2})(?::\d{2})?/i);
+  if(m) return Number(m[1])*60 + Number(m[2]);
+
   return null;
 }
 function minutesToTimeLabel(total){
@@ -562,7 +589,8 @@ function eventStartDateTime(e){
   const d=parseLocalDate(e.date);
   if(!d) return null;
   const mins=timeToMinutes(e.start);
-  if(mins === null || mins === -1) d.setHours(0,0,0,0);
+  if(mins === -1) d.setHours(0,0,0,0);
+  else if(mins === null) d.setHours(23,59,0,0);
   else d.setHours(Math.floor(mins/60), mins%60, 0, 0);
   return d;
 }
@@ -591,36 +619,102 @@ function normalizeType(type){
   if(lower.includes('game')) return 'Game';
   return t || 'Other';
 }
+
+function normalizeRowKey(key){
+  return String(key || '').trim().toLowerCase().replace(/[\s_\-\.]/g,'');
+}
+function rowPick(row, names){
+  if(!row) return '';
+  const lookup = {};
+  Object.keys(row).forEach(k => { lookup[normalizeRowKey(k)] = row[k]; });
+  for(const name of names){
+    const key = normalizeRowKey(name);
+    if(Object.prototype.hasOwnProperty.call(lookup, key)){
+      const value = lookup[key];
+      if(value !== null && value !== undefined && String(value).trim() !== '') return value;
+    }
+  }
+  return '';
+}
+function cleanTextValue(value){
+  if(value === null || value === undefined) return '';
+  return String(value).trim();
+}
+function eventSemanticKey(e){
+  return [e.date, normalizeType(e.type).toLowerCase(), String(e.title||'').trim().toLowerCase()].join('|');
+}
+function findBuiltInMatch(e){
+  const wantedTitle = String(e.title || '').trim().toLowerCase();
+  const wantedType = normalizeType(e.type).toLowerCase();
+  if(!wantedTitle) return null;
+  return baseSessions.find(b => {
+    return b.date === e.date &&
+      String(b.title || '').trim().toLowerCase() === wantedTitle &&
+      normalizeType(b.type).toLowerCase() === wantedType;
+  }) || baseSessions.find(b => {
+    return b.date === e.date && String(b.title || '').trim().toLowerCase() === wantedTitle;
+  }) || null;
+}
+
 function normalizeEvent(row){
-  const dateObj=parseLocalDate(row.date || row.Date || row.startDate || row.day);
+  row = row || {};
+  const rawDate = rowPick(row, ['date','Date','startDate','Start Date','day','Day']);
+  const rawTitle = rowPick(row, ['title','Title','name','Name','event','Event','activity','Activity']);
+  const rawType = rowPick(row, ['type','Type','category','Category','eventType','Event Type']);
+  const dateObj=parseLocalDate(rawDate);
   const date=dateObj ? toISODate(dateObj) : todayLocalISO();
-  const start=row.start || row.startTime || row['Start Time'] || row.time || '';
-  const end=row.end || row.endTime || row['End Time'] || '';
-  const type=normalizeType(row.type || row.Type || row.category || row.Category);
-  const minutes=Number(row.minutes || row.Minutes || calcMinutes(start,end) || 0);
-  return {
-    id: row.id || row.ID || makeEventId(date,start,row.title || row.Title || row.name || ''),
+  const type=normalizeType(rawType || rawTitle || 'Other');
+  let start=rowPick(row, ['start','Start','startTime','StartTime','Start Time','start_time','time','Time','begin','Begin','beginTime','Begin Time']);
+  let end=rowPick(row, ['end','End','endTime','EndTime','End Time','end_time','finish','Finish','finishTime','Finish Time']);
+  let location=rowPick(row, ['location','Location','place','Place','venue','Venue','rink','Rink']);
+  let title=cleanTextValue(rawTitle) || typeInfo[type]?.label || type;
+  let minutes=Number(rowPick(row, ['minutes','Minutes','duration','Duration','mins','Mins']) || calcMinutes(start,end) || 0);
+
+  let event = {
+    id: cleanTextValue(rowPick(row, ['id','ID','eventId','Event ID'])),
     date,
     type,
-    start: String(start || ''),
-    end: String(end || ''),
-    title: row.title || row.Title || row.name || row.Event || typeInfo[type]?.label || type,
-    location: row.location || row.Location || '',
-    owner: row.owner || row.addedBy || row.AddedBy || 'Parent',
+    start: cleanTextValue(start),
+    end: cleanTextValue(end),
+    title,
+    location: cleanTextValue(location),
+    owner: cleanTextValue(rowPick(row, ['owner','Owner','addedBy','AddedBy','Added By'])) || 'Parent',
     minutes,
-    notes: row.notes || row.note || row.Notes || '',
+    notes: cleanTextValue(rowPick(row, ['notes','note','Notes','Note'])),
     remote: !!row.remote,
     generated: !!row.generated
   };
+
+  // If the shared Sheet sends a duplicate built-in item with blank or damaged time fields,
+  // fill it from the built-in schedule and give it the same ID so it cannot appear twice.
+  const builtIn = findBuiltInMatch(event);
+  const damagedStart = timeToMinutes(event.start) === null;
+  const damagedEnd = event.end && timeToMinutes(event.end) === null;
+  if(builtIn && (damagedStart || damagedEnd || !event.location || !event.minutes)){
+    event.start = damagedStart ? builtIn.start : event.start;
+    event.end = (!event.end || damagedEnd) ? builtIn.end : event.end;
+    event.location = event.location || builtIn.location || '';
+    event.minutes = event.minutes || builtIn.minutes || calcMinutes(event.start,event.end);
+    event.id = builtIn.id || makeEventId(builtIn.date,builtIn.start,builtIn.title);
+  }
+
+  if(!event.id) event.id = makeEventId(event.date,event.start,event.title);
+  return event;
 }
 function makeEventId(date,start,title){
   return `${date}|${String(start).trim()}|${String(title).trim()}`.toLowerCase().replace(/[^a-z0-9|]+/g,'-');
 }
 function allSessions(){
   const map=new Map();
+  const semanticTimed = new Map();
   [...sessions, ...remoteEvents, ...localAddedEvents].map(normalizeEvent).forEach(e=>{
+    const sem = eventSemanticKey(e);
+    const existingTimedKey = semanticTimed.get(sem);
+    const hasGoodTime = timeToMinutes(e.start) !== null;
+    if(existingTimedKey && !hasGoodTime) return;
     const key=e.id || makeEventId(e.date,e.start,e.title);
     if(!map.has(key)) map.set(key,e);
+    if(hasGoodTime && !semanticTimed.has(sem)) semanticTimed.set(sem,key);
   });
   return [...map.values()].sort(compareEvents);
 }
