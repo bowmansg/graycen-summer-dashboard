@@ -1,1921 +1,899 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Graycen Summer Training</title>
-
-  <link rel="apple-touch-icon" href="apple-touch-icon.png">
-  <link rel="icon" type="image/png" href="apple-touch-icon.png">
-  <meta name="apple-mobile-web-app-title" content="Graycen Hockey">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#123d2a" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="Graycen Training" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <title>Graycen Summer Training Dashboard</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
   <style>
     :root{
-      --page:#f4f8f5;
-      --panel:#ffffff;
-      --card:#f8faf8;
-      --ink:#101828;
-      --muted:#667085;
-      --line:#d8e4d8;
-      --navy:#082015;
-      --green:#168735;
-      --green2:#22a447;
-      --accent:#39ff14;
-      --blue:#1f55d6;
-      --red:#ef4444;
-      --orange:#f97316;
-      --gold:#f4c430;
-      --purple:#8b5cf6;
-      --gray:#64748b;
-      --shadow:0 18px 45px rgba(15,23,42,.12);
-      --softShadow:0 8px 26px rgba(15,23,42,.05);
+      --bg:#ffffff;
+      --ink:#111111;
+      --muted:#646464;
+      --soft:#f6f6f4;
+      --soft2:#fbfbfa;
+      --line:#deded8;
+      --warm:#123d2a;
+      --warm2:#1f5a3f;
+      --ice:#39ff14;
+      --ice-soft:#eaffea;
+      --ice-ink:#0a3b05;
+      --strength:#1f55d6;
+      --strength-soft:#e5ecff;
+      --shooting:#ff8a00;
+      --shooting-soft:#fff0df;
+      --stick:#f4c430;
+      --stick-soft:#fff7d8;
+      --away:#e53935;
+      --away-soft:#ffe9e9;
+      --journal:#f2ebff;
+      --journal-ink:#5b3a8e;
+      --shadow:0 14px 40px rgba(0,0,0,.08);
       --radius:24px;
     }
-
     *{box-sizing:border-box}
-
+    html{scroll-behavior:smooth}
     body{
       margin:0;
-      background:var(--page);
+      background:var(--bg);
       color:var(--ink);
       font-family:"DM Sans",system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+      -webkit-font-smoothing:antialiased;
+      padding-bottom:env(safe-area-inset-bottom);
     }
-
-    .wrap{
-      max-width:1080px;
-      margin:0 auto;
-      padding:24px 16px 70px;
-    }
-
+    button,input,select,textarea{font:inherit}
+    .wrap{max-width:1120px;margin:0 auto;padding:18px}
     .hero{
-      background:
-        linear-gradient(90deg,rgba(7,25,16,.96),rgba(7,25,16,.88)),
-        url("rink-hero.jpg");
-      background-size:cover;
-      background-position:center;
-      color:white;
-      border-radius:28px;
-      padding:28px;
-      box-shadow:var(--shadow);
-      position:relative;
-      overflow:hidden;
-      border:1px solid rgba(255,255,255,.15);
-    }
-
-    .hero:before{
-      content:"";
-      position:absolute;
-      inset:0;
-      background:
-        radial-gradient(circle at 82% 10%,rgba(57,255,20,.20),transparent 30%),
-        linear-gradient(135deg,rgba(5,20,13,.88),rgba(14,76,39,.48));
-      pointer-events:none;
-    }
-
-    .heroTop{
-      position:relative;
-      z-index:1;
-      display:grid;
-      grid-template-columns:minmax(0,1fr) 310px;
-      gap:22px;
-      align-items:end;
-    }
-
-    .titleRow{
-      display:flex;
-      gap:18px;
-      align-items:center;
-    }
-
-    .logoBox{
-      width:86px;
-      height:86px;
-      border-radius:22px;
-      background:white;
-      overflow:hidden;
-      padding:7px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      border:1px solid rgba(255,255,255,.18);
-      flex-shrink:0;
-      box-shadow:0 12px 24px rgba(0,0,0,.18);
-    }
-
-    .logoBox img{
-      width:100%;
-      height:100%;
-      object-fit:contain;
-      display:block;
-    }
-
-    h1{
-      font-size:48px;
-      line-height:.95;
-      margin:0;
-      letter-spacing:-.04em;
-      font-weight:900;
-    }
-
-    .subtitle{
-      font-size:34px;
-      font-weight:500;
-      margin-top:2px;
-      line-height:1;
-      letter-spacing:-.03em;
-      color:#dff7df;
-    }
-
-    .heroKicker{
-      font-size:20px;
-      font-weight:900;
-      line-height:1.35;
-      margin:24px 0 0;
-      color:#8ee46f;
-    }
-
-    .heroCopy{
-      font-size:17px;
-      font-weight:800;
-      line-height:1.45;
-      max-width:720px;
-      margin:16px 0 0;
-      color:rgba(255,255,255,.94);
-    }
-
-    .heroTiles{
-      display:grid;
-      grid-template-columns:repeat(3,1fr);
-      gap:10px;
-      margin-top:18px;
-      max-width:720px;
-    }
-
-    .heroTile{
-      background:rgba(255,255,255,.09);
-      border:1px solid rgba(255,255,255,.22);
-      border-radius:16px;
-      padding:14px 12px;
-      font-weight:900;
-      line-height:1.2;
-      display:flex;
-      gap:12px;
-      align-items:center;
-      min-width:0;
-    }
-
-    .tileIcon{
-      width:42px;
-      height:42px;
-      border-radius:13px;
-      background:rgba(255,255,255,.10);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      font-size:24px;
-      flex:0 0 auto;
-    }
-
-    .heroTile span{
-      display:block;
-      color:#8ee46f;
-      font-size:18px;
-      text-transform:uppercase;
-      letter-spacing:.07em;
-      margin-bottom:4px;
-    }
-
-    .heroTile small{
-      display:block;
-      color:#fff;
-      font-size:13px;
-      font-weight:800;
-    }
-
-    .nextCard{
-      background:white;
-      color:#111827;
-      border:0;
-      border-radius:24px;
-      padding:22px;
-      min-width:0;
-      box-shadow:0 10px 28px rgba(0,0,0,.18);
-    }
-
-    .eyebrow{
-      font-size:12px;
-      text-transform:uppercase;
-      letter-spacing:.12em;
-      color:var(--green);
-      font-weight:900;
-    }
-
-    .nextTitle{
-      font-size:29px;
-      font-weight:900;
-      margin-top:8px;
-      line-height:1.05;
-    }
-
-    .nextMeta{
-      font-size:15px;
-      color:#475467;
-      margin-top:8px;
-      line-height:1.5;
-      font-weight:700;
-    }
-
-    .viewDayBtn{
-      margin-top:16px;
-      width:100%;
-      border:0;
-      border-radius:14px;
-      padding:12px 14px;
-      font-weight:900;
-      cursor:pointer;
-      background:linear-gradient(135deg,var(--green),#0f6f2c);
-      color:white;
-    }
-
-    .tabs{
-      margin:18px 0 14px;
-      background:white;
-      border:1px solid var(--line);
-      border-radius:24px;
-      display:grid;
-      grid-template-columns:repeat(7,1fr);
-      padding:8px;
-      gap:8px;
-      box-shadow:0 6px 18px rgba(15,23,42,.04);
-    }
-
-    .tabBtn{
-      border:0;
-      background:transparent;
-      border-radius:18px;
-      padding:13px 8px;
-      font-weight:900;
-      color:#1f2937;
-      cursor:pointer;
-      font-size:14px;
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      gap:5px;
-      line-height:1.1;
-    }
-
-    .tabIcon{
-      font-size:18px;
-      line-height:1;
-    }
-
-    .tabBtn.active{
-      background:var(--navy);
-      color:white;
-      box-shadow:inset 0 -5px 0 var(--accent);
-    }
-
-    .legendShell{
-      margin:14px 0 18px;
-      background:white;
-      border:1px solid var(--line);
-      border-radius:18px;
-      box-shadow:0 4px 14px rgba(15,23,42,.035);
-      overflow:hidden;
-    }
-
-    .legendToggle{
-      width:100%;
-      border:0;
-      background:white;
-      color:#0b1220;
-      padding:14px 16px;
-      font:inherit;
-      font-weight:900;
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      cursor:pointer;
-    }
-
-    .legendDots{
-      display:inline-flex;
-      gap:4px;
-      margin-right:8px;
-      vertical-align:middle;
-    }
-
-    .tinyDot{
-      width:10px;
-      height:10px;
-      border-radius:50%;
-      display:inline-block;
-    }
-
-    .legend{
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-      padding:0 14px 14px;
-    }
-
-    .legend.hiddenLegend{
-      display:none;
-    }
-
-    .pill{
-      display:inline-flex;
-      align-items:center;
-      gap:8px;
-      background:white;
-      border:1px solid var(--line);
-      border-radius:999px;
-      padding:9px 13px;
-      font-size:14px;
-      font-weight:900;
-      box-shadow:0 4px 14px rgba(15,23,42,.035);
-    }
-
-    .dot{
-      width:13px;
-      height:13px;
-      border-radius:999px;
-      background:var(--gray);
-    }
-
-    .grid{
-      display:grid;
-      grid-template-columns:1.35fr .8fr;
-      gap:16px;
-      align-items:start;
-    }
-
-    .panel{
-      background:white;
-      border:1px solid var(--line);
-      border-radius:var(--radius);
-      padding:20px;
-      box-shadow:var(--softShadow);
-    }
-
-    h2{
-      font-size:30px;
-      margin:0 0 10px;
-      line-height:1;
-      letter-spacing:-.035em;
-      font-weight:900;
-    }
-
-    h3{
-      font-size:20px;
-      margin:0 0 10px;
-      letter-spacing:-.02em;
-      font-weight:900;
-    }
-
-    .sectionLabel{
-      color:var(--muted);
-      font-size:15px;
-      margin-bottom:4px;
-      font-weight:700;
-    }
-
-    .accentLine{
-      height:10px;
-      border-radius:999px;
-      background:linear-gradient(90deg,var(--accent),rgba(57,255,20,.08));
-      margin:16px 0 18px;
-    }
-
-    input,select,textarea{
-      width:100%;
-      border:1px solid var(--line);
-      border-radius:16px;
-      padding:13px 14px;
-      font:inherit;
-      font-weight:700;
-      background:white;
-      color:var(--ink);
-    }
-
-    textarea{
-      min-height:86px;
-      resize:vertical;
-    }
-
-    label{
-      display:block;
-      font-size:12px;
-      font-weight:900;
-      color:var(--muted);
-      text-transform:uppercase;
-      letter-spacing:.06em;
-      margin:12px 0 6px;
-    }
-
-    .row{
-      display:grid;
-      grid-template-columns:1fr 1fr;
-      gap:10px;
-    }
-
-    .timeRow{
-      display:grid;
-      grid-template-columns:1fr 1fr 1fr;
-      gap:8px;
-    }
-
-    .btn{
-      border:0;
-      border-radius:16px;
-      padding:13px 16px;
-      font-weight:900;
-      cursor:pointer;
-      background:var(--navy);
-      color:white;
-    }
-
-    .btn.secondary{
-      background:white;
-      color:var(--navy);
-      border:1px solid var(--line);
-    }
-
-    .btn.danger{
-      background:white;
-      color:#b42318;
-      border:1px solid #fecaca;
-    }
-
-    .btn.small{
-      padding:8px 12px;
-      border-radius:999px;
-      font-size:13px;
-    }
-
-    .dayToolbar{
-      display:grid;
-      grid-template-columns:1fr 1fr;
-      gap:10px;
-      margin:12px 0;
-    }
-
-    .quickActions{
-      display:grid;
-      grid-template-columns:1fr 1fr;
-      gap:10px;
-      margin-top:14px;
-    }
-
-    .eventCard{
-      background:white;
-      border:1px solid var(--line);
-      border-radius:22px;
-      padding:16px;
-      margin:12px 0;
-      position:relative;
-      box-shadow:0 6px 18px rgba(15,23,42,.035);
-    }
-
-    .catBadge{
-      display:inline-flex;
-      border-radius:999px;
-      padding:8px 12px;
-      font-weight:900;
-      color:white;
-      font-size:13px;
-      margin-bottom:10px;
-      margin-right:6px;
-    }
-
-    .journalBadge{
-      display:inline-flex;
-      border-radius:999px;
-      padding:8px 12px;
-      font-weight:900;
-      color:#6d28d9;
-      background:#ede9fe;
-      font-size:13px;
-      margin-bottom:10px;
-    }
-
-    .eventTitle{
-      font-size:22px;
-      font-weight:900;
-      margin-bottom:3px;
-      line-height:1.1;
-    }
-
-    .eventMeta,.eventNotes{
-      color:var(--muted);
-      font-weight:600;
-      line-height:1.35;
-    }
-
-    .durationBox{
-      position:absolute;
-      right:16px;
-      top:16px;
-      background:#f2f4f7;
-      border-radius:18px;
-      padding:12px 16px;
-      text-align:center;
-      min-width:72px;
-    }
-
-    .durationBox strong{
-      font-size:26px;
-      display:block;
-      line-height:1;
-    }
-
-    .durationBox span{
-      color:var(--muted);
-      font-size:12px;
-      font-weight:900;
-      text-transform:uppercase;
-      letter-spacing:.06em;
-    }
-
-    .calculatedBox{
-      background:#f8fafc;
-      border:1px solid var(--line);
-      border-radius:16px;
-      padding:14px;
-      font-weight:900;
-      color:#111827;
-      min-height:49px;
-    }
-
-    .actions{
-      display:flex;
-      gap:8px;
-      margin-top:14px;
-      flex-wrap:wrap;
-    }
-
-    .weekDay{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      border:1px solid var(--line);
-      border-radius:16px;
-      padding:12px 14px;
-      margin:8px 0;
-      font-weight:900;
-      cursor:pointer;
-      background:white;
-    }
-
-    .weekDay.active{
-      background:var(--navy);
-      color:white;
-      box-shadow:inset 0 -4px 0 var(--accent);
-    }
-
-    .monthGrid{
-      display:grid;
-      grid-template-columns:repeat(7,1fr);
-      gap:6px;
-      margin-top:10px;
-    }
-
-    .dow{
-      text-align:center;
-      font-size:12px;
-      color:var(--muted);
-      font-weight:900;
-      padding:6px;
-    }
-
-    .dayCell{
-      background:white;
-      border:1px solid var(--line);
-      border-radius:14px;
-      min-height:92px;
-      padding:8px;
-      cursor:pointer;
-      box-shadow:0 4px 12px rgba(15,23,42,.025);
-    }
-
-    .dayCell.today{
-      outline:3px solid var(--accent);
-      outline-offset:0;
-    }
-
-    .dayNum{
-      font-weight:900;
-      margin-bottom:2px;
-    }
-
-    .miniItem{
-      font-size:11px;
-      font-weight:900;
-      color:white;
-      border-radius:999px;
-      padding:3px 6px;
-      margin-top:4px;
-      white-space:nowrap;
-      overflow:hidden;
-      text-overflow:ellipsis;
-    }
-
-    .summaryGrid{
-      display:grid;
-      grid-template-columns:repeat(4,1fr);
-      gap:12px;
-    }
-
-    .stat{
-      background:var(--card);
-      border:1px solid var(--line);
-      border-radius:20px;
-      padding:16px;
-    }
-
-    .stat strong{
-      display:block;
-      font-size:30px;
-      line-height:1;
-      margin-top:4px;
-    }
-
-    .status{
-      padding:18px;
-      border-radius:18px;
-      background:white;
-      border:1px solid var(--line);
-      font-weight:800;
-      color:#344054;
-    }
-
-    .hidden{
-      display:none!important;
-    }
-
-    @media(max-width:850px){
-      .wrap{
-        padding:14px 10px 60px;
-      }
-
-      .hero{
-        padding:18px;
-        border-radius:24px;
-        background-position:center;
-      }
-
-      .heroTop{
-        display:block;
-      }
-
-      .titleRow{
-        gap:14px;
-      }
-
-      .logoBox{
-        width:74px;
-        height:74px;
-        border-radius:19px;
-      }
-
-      h1{
-        font-size:40px;
-      }
-
-      .subtitle{
-        font-size:29px;
-      }
-
-      .heroKicker{
-        margin-top:18px;
-        font-size:17px;
-      }
-
-      .heroCopy{
-        margin-top:14px;
-        font-size:16px;
-        line-height:1.45;
-      }
-
-      .heroTiles{
-        grid-template-columns:repeat(3,minmax(0,1fr));
-        gap:6px;
-        margin-top:16px;
-      }
-
-      .heroTile{
-        padding:8px 5px;
-        border-radius:13px;
-        display:block;
-        text-align:center;
-      }
-
-      .tileIcon{
-        display:none;
-      }
-
-      .heroTile span{
-        font-size:11px;
-        margin-bottom:4px;
-        letter-spacing:.06em;
-      }
-
-      .heroTile small{
-        font-size:10px;
-        line-height:1.2;
-      }
-
-      .nextCard{
-        margin-top:18px;
-        padding:20px 18px;
-        border-radius:24px;
-      }
-
-      .nextTitle{
-        font-size:28px;
-      }
-
-      .nextMeta{
-        font-size:15px;
-      }
-
-      .tabs{
-        grid-template-columns:repeat(4,1fr);
-        border-radius:24px;
-        gap:8px;
-        padding:8px;
-        margin-top:18px;
-      }
-
-      .tabBtn{
-        padding:12px 6px;
-        font-size:13px;
-        border-radius:18px;
-      }
-
-      .tabIcon{
-        font-size:17px;
-      }
-
-      .legend{
-        gap:8px;
-      }
-
-      .pill{
-        padding:8px 12px;
-        font-size:13px;
-      }
-
-      .grid{
-        grid-template-columns:1fr;
-        gap:14px;
-      }
-
-      .panel{
-        padding:18px;
-        border-radius:24px;
-      }
-
-      h2{
-        font-size:30px;
-      }
-
-      h3{
-        font-size:19px;
-      }
-
-      .row,.summaryGrid{
-        grid-template-columns:1fr;
-      }
-
-      .dayToolbar{
-        grid-template-columns:1fr 1fr;
-      }
-
-      .quickActions{
-        grid-template-columns:1fr;
-      }
-
-      .eventCard{
-        padding:15px;
-        padding-right:15px;
-        border-radius:20px;
-        margin:10px 0;
-      }
-
-      .eventTitle{
-        font-size:21px;
-        padding-right:0;
-      }
-
-      .durationBox{
-        position:static;
-        display:inline-block;
-        margin-top:10px;
-      }
-
-      .monthGrid{
-        gap:4px;
-      }
-
-      .dow{
-        font-size:11px;
-        padding:4px 2px;
-      }
-
-      .dayCell{
-        min-height:78px;
-        padding:6px;
-        border-radius:12px;
-      }
-
-      .miniItem{
-        font-size:10px;
-        padding:3px 5px;
-      }
+      background:linear-gradient(135deg,#0f2f21 0%,#17452f 70%,#10291f 100%);
+      color:#fff;border-radius:30px;padding:24px;margin-bottom:14px;position:relative;overflow:hidden;box-shadow:var(--shadow)
+    }
+    .hero:before{content:"";position:absolute;right:-90px;top:-120px;width:320px;height:320px;border-radius:50%;background:rgba(57,255,20,.16);filter:blur(2px)}
+    .hero-inner{position:relative;z-index:1}
+    .hero-main{display:flex;gap:18px;align-items:center}
+    .logo-box{width:110px;height:100px;border-radius:24px;background:rgba(255,255,255,.92);display:flex;align-items:center;justify-content:center;padding:10px;box-shadow:0 10px 30px rgba(0,0,0,.12);flex:0 0 auto}
+    .logo-fallback{width:78px;height:78px;border-radius:22px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#113d2a,#39ff14);color:white;font-weight:900;font-size:42px;letter-spacing:-2px}
+    .eyebrow{display:inline-flex;background:rgba(57,255,20,.17);border:1px solid rgba(57,255,20,.36);border-radius:999px;padding:6px 12px;font-size:13px;font-weight:900;margin-bottom:12px;color:#ecffe8}
+    h1{font-size:43px;line-height:.98;margin:0;font-weight:900;letter-spacing:-1.5px}
+    .hero-lead{color:#efece8;line-height:1.45;margin:16px 0 0;font-size:18px;font-weight:650;max-width:840px}
+    .hero-tools{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:14px;width:100%}
+    .hero-tool{border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.10);border-radius:16px;padding:10px 12px;text-align:center}
+    .hero-tool span{display:block;color:var(--ice);font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.08em;margin-bottom:3px}
+    .hero-tool strong{font-size:14px;color:#fff}
+    .next-card{margin-top:16px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);border-radius:22px;padding:14px 16px;display:grid;gap:4px}
+    .next-card .label{color:#d8fbd1;text-transform:uppercase;font-weight:900;font-size:12px;letter-spacing:.08em}
+    .next-card .title{font-size:22px;font-weight:900;line-height:1.1}
+    .next-card .meta{color:#f1f1ed;font-size:14px;line-height:1.35}
+    .tabs{position:sticky;top:0;z-index:10;background:rgba(255,255,255,.94);backdrop-filter:blur(10px);display:grid;grid-template-columns:repeat(7,1fr);gap:7px;border:1px solid var(--line);border-radius:22px;padding:7px;margin-bottom:14px;box-shadow:0 8px 24px rgba(0,0,0,.05)}
+    .tab{border:0;border-radius:16px;background:transparent;color:#333;padding:12px 8px;font-weight:900;cursor:pointer;font-size:13px}
+    .tab.active{background:var(--warm);color:#fff}
+    .legend-card{border:1px solid var(--line);border-radius:20px;background:var(--soft2);margin-bottom:14px;overflow:hidden}
+    .legend-toggle{width:100%;border:0;background:transparent;padding:12px 14px;display:flex;justify-content:space-between;align-items:center;font-weight:900;color:#242424;cursor:pointer}
+    .legend-body{display:flex;flex-wrap:wrap;gap:8px;padding:0 14px 14px}
+    .legend-card.collapsed .legend-body{display:none}
+    .pill{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:999px;background:#fff;padding:7px 10px;font-size:12px;font-weight:900;white-space:nowrap}
+    .dot{width:10px;height:10px;border-radius:999px;display:inline-block;background:#bbb}
+    .dot.ice{background:var(--ice)} .dot.strength{background:var(--strength)} .dot.shooting{background:var(--shooting)} .dot.stick{background:var(--stick)} .dot.away{background:var(--away)} .dot.other{background:#8b8b8b}
+    main{display:block}
+    .view{display:none}
+    .view.active{display:block}
+    .section{display:grid;grid-template-columns:1.05fr .95fr;gap:14px}
+    .home-stack{display:grid;gap:14px}
+    .card{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:18px;box-shadow:0 9px 30px rgba(0,0,0,.045)}
+    .card.soft{background:var(--soft2)}
+    .card h2{margin:2px 0 12px;font-size:22px;letter-spacing:-.4px}
+    .muted{color:var(--muted);font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.07em}
+    .controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:10px 0 14px}
+    .navbtn,.btn{border:0;border-radius:14px;background:var(--warm);color:white;font-weight:900;padding:11px 14px;cursor:pointer}
+    .navbtn.secondary,.btn.secondary{background:#efefeb;color:#171717;border:1px solid var(--line)}
+    input,select,textarea{width:100%;border:1px solid var(--line);border-radius:14px;padding:12px 13px;background:#fff;color:#111;outline:none}
+    textarea{min-height:92px;resize:vertical}
+    .form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+    .form-grid .full{grid-column:1/-1}
+    .field-label{font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:6px}
+    .time-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
+    .event-list{display:grid;gap:9px}
+    .event{border:1px solid var(--line);border-left:7px solid #bbb;border-radius:18px;padding:12px;background:#fff;display:grid;gap:4px}
+    .event.ice{border-left-color:var(--ice);background:linear-gradient(90deg,var(--ice-soft),#fff 42%)}
+    .event.strength{border-left-color:var(--strength);background:linear-gradient(90deg,var(--strength-soft),#fff 42%)}
+    .event.shooting{border-left-color:var(--shooting);background:linear-gradient(90deg,var(--shooting-soft),#fff 42%)}
+    .event.stick{border-left-color:var(--stick);background:linear-gradient(90deg,var(--stick-soft),#fff 42%)}
+    .event.away{border-left-color:var(--away);background:linear-gradient(90deg,var(--away-soft),#fff 42%)}
+    .event .top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+    .event .title{font-weight:900;font-size:16px;line-height:1.15}
+    .event .time{font-weight:900;font-size:13px;white-space:nowrap;color:#222}
+    .event .meta{color:var(--muted);font-size:13px;line-height:1.35}
+    .event .type{font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.06em;color:#333}
+    .empty{border:1px dashed var(--line);border-radius:18px;background:var(--soft);padding:15px;color:var(--muted);font-weight:700}
+    .away-notice{border-radius:18px;border:1px solid #ffc6c6;background:var(--away-soft);color:#9a1616;padding:12px;margin-bottom:12px;font-weight:900}
+    .quick{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+    .quick-card{background:var(--soft);border:1px solid var(--line);border-radius:18px;padding:13px;text-align:center}
+    .quick-card .num{font-size:28px;font-weight:900;color:var(--warm)}
+    .quick-card .label{font-size:12px;color:var(--muted);font-weight:900;text-transform:uppercase;letter-spacing:.06em}
+    .month-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}
+    .calendar{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+    .dow{font-weight:900;color:var(--muted);font-size:12px;text-align:center;padding:5px;text-transform:uppercase;letter-spacing:.06em}
+    .day{min-height:112px;border:1px solid var(--line);border-radius:16px;background:#fff;padding:7px;display:flex;flex-direction:column;gap:5px;overflow:hidden;cursor:pointer}
+    .day.other-month{background:#f9f9f6;color:#bbb}
+    .day.today{outline:3px solid rgba(57,255,20,.45)}
+    .day.selected{outline:3px solid rgba(18,61,42,.28)}
+    .day-num{font-size:12px;font-weight:900;color:#333}
+    .day-chip{font-size:9px;font-weight:900;border-radius:999px;padding:4px 5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;background:#eee;color:#111}
+    .day-chip.ice{background:var(--ice);color:var(--ice-ink)}
+    .day-chip.strength{background:var(--strength);color:#fff}
+    .day-chip.shooting{background:var(--shooting);color:#fff}
+    .day-chip.stick{background:var(--stick);color:#3f3100}
+    .day-chip.away{background:var(--away);color:#fff}
+    .week-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:8px}
+    .week-day{border:1px solid var(--line);border-radius:18px;background:#fff;padding:10px;min-height:260px}
+    .week-day h3{font-size:14px;margin:0 0 8px;line-height:1.2}
+    .week-day .event{border-radius:13px;padding:8px;border-left-width:5px;margin-bottom:7px}
+    .week-day .event .title{font-size:12px}.week-day .event .meta,.week-day .event .time{font-size:11px}
+    .journal-table{width:100%;border-collapse:collapse;font-size:13px}
+    .journal-table th,.journal-table td{text-align:left;border-bottom:1px solid var(--line);padding:9px 6px;vertical-align:top}
+    .journal-table th{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.06em}
+    .status{font-size:12px;color:var(--muted);font-weight:800;margin-top:8px}
+    @media(max-width:860px){
+      .wrap{padding:12px}
+      .hero{padding:18px;border-radius:26px}.hero-main{gap:12px}.logo-box{width:78px;height:72px;border-radius:18px}.logo-fallback{width:56px;height:56px;border-radius:16px;font-size:30px}
+      h1{font-size:33px}.eyebrow{font-size:11px;margin-bottom:8px}.hero-lead{font-size:14px}.hero-tools{gap:6px}.hero-tool{padding:8px 7px;border-radius:13px}.hero-tool span{font-size:9px}.hero-tool strong{font-size:10px}
+      .tabs{grid-template-columns:repeat(4,1fr);gap:5px;border-radius:18px}.tab{font-size:12px;padding:10px 4px}
+      .section,.form-grid{grid-template-columns:1fr}.quick{grid-template-columns:repeat(2,1fr)}.calendar{gap:4px}.day{min-height:92px;border-radius:12px;padding:5px}.day-chip{font-size:7.8px;padding:3px 4px}.dow{font-size:10px}.card{padding:15px}.week-grid{grid-template-columns:1fr}.week-day{min-height:unset}
+      .legend-card{border-radius:18px}.journal-table{font-size:12px}
     }
   </style>
 </head>
-
 <body>
   <div class="wrap">
-    <section class="hero">
-      <div class="heroTop">
-        <div class="heroLeft">
-          <div class="titleRow">
-            <div class="logoBox">
-              <img src="mission-logo.png" alt="Chicago Mission logo">
-            </div>
-            <div>
-              <h1>Graycen</h1>
-              <div class="subtitle">Summer Training</div>
-            </div>
-          </div>
-
-          <div class="heroKicker">Your summer training hub.</div>
-
-          <div class="heroCopy">
-            Check your schedule, stay on top of the week ahead, and log the work that helps you get better — one day at a time.
-          </div>
-
-          <div class="heroTiles">
-            <div class="heroTile"><div class="tileIcon">📅</div><div><span>Plan</span><small>Day • Week • Month</small></div></div>
-            <div class="heroTile"><div class="tileIcon">🏒</div><div><span>Train</span><small>On-Ice • Off-Ice • Skills</small></div></div>
-            <div class="heroTile"><div class="tileIcon">✏️</div><div><span>Log</span><small>What you trained</small></div></div>
+    <header class="hero">
+      <div class="hero-inner">
+        <div class="hero-main">
+          <div class="logo-box"><div class="logo-fallback">G</div></div>
+          <div>
+            <div class="eyebrow">Graycen</div>
+            <h1>Summer<br>Training</h1>
           </div>
         </div>
-
-        <div class="nextCard">
-          <div class="eyebrow">Next Scheduled Session</div>
-          <div id="nextTitle" class="nextTitle">—</div>
-          <div id="nextMeta" class="nextMeta">Loading...</div>
-          <button class="viewDayBtn" id="viewFullDay">View Full Day</button>
+        <p class="hero-lead">Your summer training hub. Check your schedule, stay on top of the week ahead, and log the work that helps you get better — one day at a time.</p>
+        <div class="hero-tools">
+          <div class="hero-tool"><span>Plan</span><strong>Day · Week · Month</strong></div>
+          <div class="hero-tool"><span>Train</span><strong>Ice · Off-Ice · Skills</strong></div>
+          <div class="hero-tool"><span>Log</span><strong>What you trained</strong></div>
         </div>
+        <div class="next-card" id="nextSessionCard">
+          <div class="label">Next scheduled session</div>
+          <div class="title">—</div>
+          <div class="meta">—</div>
+        </div>
+      </div>
+    </header>
+
+    <nav class="tabs" aria-label="Dashboard sections">
+      <button class="tab active" data-view="home" onclick="showView('home')">Home</button>
+      <button class="tab" data-view="day" onclick="showView('day')">Day</button>
+      <button class="tab" data-view="week" onclick="showView('week')">Week</button>
+      <button class="tab" data-view="month" onclick="showView('month')">Month</button>
+      <button class="tab" data-view="summary" onclick="showView('summary')">Summary</button>
+      <button class="tab" data-view="journal" onclick="showView('journal')">Journal</button>
+      <button class="tab" data-view="add" onclick="showView('add')">Add Event</button>
+    </nav>
+
+    <section class="legend-card collapsed" id="legendCard">
+      <button class="legend-toggle" onclick="toggleLegend()"><span>Color Legend</span><span id="legendArrow">Show</span></button>
+      <div class="legend-body">
+        <span class="pill"><span class="dot ice"></span>On-ice</span>
+        <span class="pill"><span class="dot strength"></span>Off-ice</span>
+        <span class="pill"><span class="dot shooting"></span>Shooting</span>
+        <span class="pill"><span class="dot stick"></span>Stick handling</span>
+        <span class="pill"><span class="dot away"></span>Away</span>
       </div>
     </section>
 
-    <nav class="tabs">
-      <button class="tabBtn active" data-tab="home"><span class="tabIcon">⌂</span>Home</button>
-      <button class="tabBtn" data-tab="day"><span class="tabIcon">▣</span>Day</button>
-      <button class="tabBtn" data-tab="week"><span class="tabIcon">▦</span>Week</button>
-      <button class="tabBtn" data-tab="calendar"><span class="tabIcon">▣</span>Month</button>
-      <button class="tabBtn" data-tab="summary"><span class="tabIcon">◷</span>Summary</button>
-      <button class="tabBtn" data-tab="journal"><span class="tabIcon">▱</span>Journal</button>
-      <button class="tabBtn" data-tab="add"><span class="tabIcon">＋</span>Add Event</button>
-    </nav>
-
-    <div class="legendShell">
-      <button id="legendToggle" class="legendToggle">
-        <span><span class="legendDots" id="legendDots"></span>Color Legend</span>
-        <span id="legendToggleText">Show</span>
-      </button>
-      <div id="legend" class="legend hiddenLegend"></div>
-    </div>
-
-    <main id="home" class="tabPage">
-      <div class="grid">
-        <section class="panel">
-          <div class="sectionLabel">Today / Selected Day</div>
-          <h2 id="selectedDayTitle">Today</h2>
-          <div class="accentLine"></div>
-          <input id="selectedDate" type="date" />
-          <div id="dayEvents"></div>
-        </section>
-
-        <section class="panel">
-          <div class="sectionLabel">This Week</div>
-          <h2>Week Ahead</h2>
-          <div class="accentLine"></div>
-          <div style="display:flex;gap:8px;margin:12px 0;flex-wrap:wrap">
-            <button class="btn secondary small" id="prevWeek">‹ Previous</button>
-            <button class="btn secondary small" id="nextWeek">Next ›</button>
+    <main>
+      <section class="view active" id="view-home">
+        <div class="section">
+          <div class="card">
+            <div class="muted">Today / Selected Day</div>
+            <h2 id="selectedDayTitleHome">Selected Day</h2>
+            <div class="controls">
+              <input type="date" id="selectedDate" onchange="onSelectedDateChange()" style="max-width:210px">
+              <button class="navbtn secondary" onclick="jumpToday()">Today</button>
+            </div>
+            <div id="awayNoticeHome"></div>
+            <div class="event-list" id="dailySessionsHome"></div>
           </div>
-          <div id="weekList"></div>
-        </section>
-      </div>
-    </main>
-
-    <main id="day" class="tabPage hidden">
-      <div class="grid">
-        <section class="panel">
-          <div class="sectionLabel">Day View</div>
-          <h2 id="dayViewTitle">Today</h2>
-          <div class="accentLine"></div>
-
-          <div class="dayToolbar">
-            <button class="btn secondary" id="prevDay">‹ Previous Day</button>
-            <button class="btn secondary" id="nextDay">Next Day ›</button>
+          <div class="home-stack">
+            <div class="card">
+              <div class="muted">This Week</div>
+              <h2>Week Ahead</h2>
+              <div class="controls">
+                <button class="navbtn secondary" onclick="moveWeek(-7)">‹ Previous</button>
+                <button class="navbtn secondary" onclick="jumpToday()">Today</button>
+                <button class="navbtn secondary" onclick="moveWeek(7)">Next ›</button>
+              </div>
+              <div class="event-list" id="weekListHome"></div>
+            </div>
+            <div class="card">
+              <div class="muted">Quick Snapshot</div>
+              <h2>Summer Totals</h2>
+              <div class="quick">
+                <div class="quick-card"><div class="num" id="scheduledSkatesHome">0</div><div class="label">Skates</div></div>
+                <div class="quick-card"><div class="num" id="scheduledStrengthHome">0</div><div class="label">Off-Ice</div></div>
+                <div class="quick-card"><div class="num" id="scheduledShootingHome">0</div><div class="label">Shooting</div></div>
+                <div class="quick-card"><div class="num" id="scheduledStickHome">0</div><div class="label">Stick</div></div>
+              </div>
+              <div class="status" id="remoteStatus">Loading shared schedule…</div>
+            </div>
           </div>
-
-          <label>Selected Date</label>
-          <input id="dayViewDate" type="date" />
-
-          <div class="quickActions">
-            <button class="btn" id="quickAddEvent">Add Event for This Day</button>
-            <button class="btn secondary" id="quickLogTraining">Log Training for This Day</button>
-          </div>
-        </section>
-
-        <section class="panel">
-          <div class="sectionLabel">Scheduled Work</div>
-          <h2>Schedule</h2>
-          <div class="accentLine"></div>
-          <div id="dayViewEvents"></div>
-        </section>
-      </div>
-
-      <div style="height:14px"></div>
-
-      <section class="panel">
-        <div class="sectionLabel">Logged Work</div>
-        <h2>Training Journal</h2>
-        <div class="accentLine"></div>
-        <div id="dayViewJournals"></div>
-      </section>
-    </main>
-
-    <main id="calendar" class="tabPage hidden">
-      <section class="panel">
-        <div class="row">
-          <button class="btn secondary" id="prevMonth">‹ Previous Month</button>
-          <button class="btn secondary" id="nextMonth">Next Month ›</button>
         </div>
-        <h2 id="monthTitle" style="margin-top:18px"></h2>
-        <div class="accentLine"></div>
-        <div id="monthGrid" class="monthGrid"></div>
       </section>
-    </main>
 
-    <main id="week" class="tabPage hidden">
-      <section class="panel">
-        <h2>Full Week</h2>
-        <div class="accentLine"></div>
-        <div id="fullWeek"></div>
-      </section>
-    </main>
-
-    <main id="summary" class="tabPage hidden">
-      <section class="panel">
-        <h2>Summary</h2>
-        <div class="accentLine"></div>
-        <div id="summaryGrid" class="summaryGrid"></div>
-        <div id="categorySummary" style="margin-top:20px"></div>
-      </section>
-    </main>
-
-    <main id="journal" class="tabPage hidden">
-      <div class="grid">
-        <section class="panel">
-          <div class="sectionLabel">Graycen journal</div>
-          <h2>What did you work on?</h2>
-          <div class="accentLine"></div>
-          <p class="eventMeta">Simple activity log. Choose the activity, enter minutes, and write one quick line about what you worked on.</p>
-
-          <label>Date</label>
-          <input id="journalDate" type="date">
-
-          <label>Category</label>
-          <select id="journalCategory"></select>
-
-          <label>Minutes</label>
-          <input id="journalMinutes" type="number" min="0" step="5" placeholder="Example: 60">
-
-          <label>What did you work on?</label>
-          <input id="journalTitle" placeholder="Example: lower body lift, edge work, 100 pucks">
-
-          <label>Optional quick note</label>
-          <textarea id="journalNote" placeholder="Optional note"></textarea>
-
-          <label style="text-transform:none;letter-spacing:0;font-size:14px;color:#344054;display:flex;align-items:center;gap:10px">
-            <input id="journalRecovery" type="checkbox" style="width:auto">
-            Recovery completed — Normatec / mobility / stretch
-          </label>
-
-          <button class="btn" id="saveJournal" style="width:100%;margin-top:10px">Save Journal Entry</button>
-          <div id="journalStatus" style="margin-top:12px"></div>
-        </section>
-
-        <section class="panel">
-          <div class="sectionLabel">Recent entries</div>
-          <h2>Training Journal</h2>
-          <div class="accentLine"></div>
-          <div id="journalEntries"></div>
-        </section>
-      </div>
-    </main>
-
-    <main id="add" class="tabPage hidden">
-      <div class="grid">
-        <section class="panel">
-          <div class="sectionLabel" id="formMode">New event</div>
-          <h2 id="formTitle">Add a scheduled item</h2>
-          <div class="accentLine"></div>
-
-          <input type="hidden" id="eventId" />
-
-          <label>Date</label>
-          <input id="eventDate" type="date" />
-
-          <label>Category</label>
-          <select id="eventCategory"></select>
-
-          <label>Title</label>
-          <input id="eventTitleInput" placeholder="Example: Skate with Abbey, Phil workout, Shooting" />
-
-          <label>Start Time</label>
-          <div class="timeRow">
-            <select id="startHour"></select>
-            <select id="startMinute"></select>
-            <select id="startAmPm"></select>
+      <section class="view" id="view-day">
+        <div class="card">
+          <div class="muted">Selected Day</div>
+          <h2 id="selectedDayTitle">Daily Schedule</h2>
+          <div class="controls">
+            <button class="navbtn secondary" onclick="moveDay(-1)">‹ Previous</button>
+            <input type="date" id="selectedDateDay" onchange="syncDayDate()" style="max-width:210px">
+            <button class="navbtn secondary" onclick="jumpToday()">Today</button>
+            <button class="navbtn secondary" onclick="moveDay(1)">Next ›</button>
           </div>
+          <div id="awayNotice"></div>
+          <div class="event-list" id="dailySessions"></div>
+        </div>
+      </section>
 
-          <label>End Time</label>
-          <div class="timeRow">
-            <select id="endHour"></select>
-            <select id="endMinute"></select>
-            <select id="endAmPm"></select>
+      <section class="view" id="view-week">
+        <div class="card">
+          <div class="muted">Full Week</div>
+          <h2 id="weekTitle">Week</h2>
+          <div class="controls">
+            <button class="navbtn secondary" onclick="moveWeek(-7)">‹ Previous Week</button>
+            <button class="navbtn secondary" onclick="jumpToday()">Today</button>
+            <button class="navbtn secondary" onclick="moveWeek(7)">Next Week ›</button>
           </div>
+          <div class="week-grid" id="weekGrid"></div>
+        </div>
+      </section>
 
-          <div class="row">
-            <div>
-              <label>Location</label>
-              <input id="eventLocation" placeholder="Example: Gym, rink, home" />
+      <section class="view" id="view-month">
+        <div class="card">
+          <div class="month-head">
+            <button class="navbtn secondary" onclick="moveMonth(-1)">‹ Previous</button>
+            <div style="text-align:center">
+              <div class="muted">Summer Calendar</div>
+              <h2 id="monthTitle" style="margin:2px 0 0">Month</h2>
             </div>
-            <div>
-              <label>Calculated Minutes</label>
-              <div id="durationDisplay" class="calculatedBox">Choose start and end times</div>
+            <button class="navbtn secondary" onclick="moveMonth(1)">Next ›</button>
+          </div>
+          <div class="controls" style="justify-content:center"><button class="navbtn secondary" onclick="jumpToday()">Today</button></div>
+          <div class="calendar" id="monthCalendar"></div>
+        </div>
+      </section>
+
+      <section class="view" id="view-summary">
+        <div class="section">
+          <div class="card">
+            <div class="muted">Journal only</div>
+            <h2>Logged Minutes</h2>
+            <div class="quick">
+              <div class="quick-card"><div class="num" id="loggedMinutes">0</div><div class="label">Minutes</div></div>
+              <div class="quick-card"><div class="num" id="journalEntries">0</div><div class="label">Entries</div></div>
+              <div class="quick-card"><div class="num" id="awayDays">0</div><div class="label">Away Days</div></div>
+              <div class="quick-card"><div class="num" id="homeSkills">0</div><div class="label">Shoot + Stick</div></div>
             </div>
           </div>
-
-          <input type="hidden" id="eventDuration" />
-
-          <label>Notes</label>
-          <textarea id="eventNotes" placeholder="Optional notes"></textarea>
-
-          <div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap">
-            <button class="btn" id="saveEvent">Save Event</button>
-            <button class="btn secondary" id="clearForm">Clear</button>
+          <div class="card">
+            <h2>Journal History</h2>
+            <div class="controls">
+              <button class="btn secondary" onclick="exportDashboardData()">Export Backup</button>
+              <button class="btn secondary" onclick="resetDashboardData()">Reset Saved Data</button>
+            </div>
+            <div id="journalHistorySummary"></div>
           </div>
+        </div>
+      </section>
 
-          <div id="saveStatus" style="margin-top:12px"></div>
-        </section>
+      <section class="view" id="view-journal">
+        <div class="section">
+          <div class="card">
+            <div class="muted">Graycen journal</div>
+            <h2>What did you work on?</h2>
+            <p class="status">Simple activity log. Choose the activity, enter minutes, and write one quick line about what you worked on.</p>
+            <div class="form-grid">
+              <input type="date" id="journalDate" class="full">
+              <select id="journalType">
+                <option>On-Ice</option>
+                <option>Shooting</option>
+                <option>Stickhandling</option>
+                <option>Off-ice Workout</option>
+                <option>Other</option>
+              </select>
+              <input type="number" id="journalMinutes" min="0" step="5" placeholder="Minutes">
+              <label class="full" style="display:flex;gap:8px;align-items:center;font-weight:800"><input type="checkbox" id="journalRecovery" style="width:auto"> Recovery completed — Normatec / compression / mobility / stretch</label>
+              <textarea class="full" id="journalNote" placeholder="Quick note"></textarea>
+              <button class="btn full" onclick="saveJournalEntry()">Save Journal Entry</button>
+            </div>
+          </div>
+          <div class="card">
+            <div class="muted">Recent entries</div>
+            <h2>Training Journal</h2>
+            <div id="journalHistory"></div>
+          </div>
+        </div>
+      </section>
 
-        <section class="panel">
-          <h2>Upcoming Schedule</h2>
-          <div class="accentLine"></div>
-          <div id="upcomingEvents"></div>
-        </section>
-      </div>
+      <section class="view" id="view-add">
+        <div class="section">
+          <div class="card">
+            <div class="muted">Parent calendar</div>
+            <h2>Add a scheduled item</h2>
+            <p class="status">Added events save locally right away and are also sent to the shared Google Sheet.</p>
+            <div class="form-grid">
+              <input type="date" id="eventDate" class="full" required>
+              <select id="eventType">
+                <option value="Ice">Ice</option>
+                <option value="Strength">Strength</option>
+                <option value="Shooting">Shooting</option>
+                <option value="Stickhandling">Stickhandling</option>
+                <option value="Recovery">Recovery</option>
+                <option value="Game">Game</option>
+                <option value="Camp">Camp</option>
+                <option value="Other">Other</option>
+              </select>
+              <input id="eventLocation" placeholder="Location">
+              <div>
+                <div class="field-label">Start time</div>
+                <div class="time-row">
+                  <select id="eventStartHour"><option value="">Hour</option></select>
+                  <select id="eventStartMinute"><option value="">Min</option><option>00</option><option>15</option><option>30</option><option>45</option></select>
+                  <select id="eventStartAmPm"><option value="">AM/PM</option><option>AM</option><option>PM</option></select>
+                </div>
+              </div>
+              <div>
+                <div class="field-label">End time</div>
+                <div class="time-row">
+                  <select id="eventEndHour"><option value="">Hour</option></select>
+                  <select id="eventEndMinute"><option value="">Min</option><option>00</option><option>15</option><option>30</option><option>45</option></select>
+                  <select id="eventEndAmPm"><option value="">AM/PM</option><option>AM</option><option>PM</option></select>
+                </div>
+              </div>
+              <input class="full" id="eventTitle" placeholder="Title" required>
+              <div class="full">
+                <div class="field-label">Calculated minutes</div>
+                <div id="eventMinutesDisplay" class="empty">Choose start and end times</div>
+              </div>
+              <button class="btn full" onclick="addEvent()">Add To Calendar</button>
+            </div>
+          </div>
+          <div class="card">
+            <h2>Upcoming Schedule</h2>
+            <div class="event-list" id="upcomingList"></div>
+          </div>
+        </div>
+      </section>
     </main>
   </div>
 
-  <script>
-    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbw7-sHB4RcEVRg_GYjv_QnkUCi8-SH6X0nryXqqnnzev2fiUFJLrKef5CvIDKts9BotRw/exec";
+<script>
+'use strict';
 
-    const categories = {
-      "On-ice": "#168735",
-      "Off-ice": "#8b5cf6",
-      "Shooting": "#f97316",
-      "Stickhandling": "#f4c430",
-      "Recovery": "#20c997",
-      "Away": "#ef4444",
-      "Other": "#94a3b8"
-    };
+const DASHBOARD_VERSION = 'graycen-timefix-2026-06-06-v3';
+const STORAGE_KEY = 'graycenSummerDashboardSessions_timefix_v3';
+const JOURNAL_KEY = 'graycenSummerDashboardJournal_timefix_v3';
+const VERSION_KEY = 'graycenSummerDashboardVersion';
+const SHEET_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbw7-sHB4RcEVRg_GYjv_QnkUCi8-SH6X0nryXqqnnzev2fiUFJLrKef5CvIDKts9BotRw/exec';
 
-    let items = [];
-    let events = [];
-    let journals = [];
-    let selectedDate = toYMD(new Date());
-    let dayViewDate = selectedDate;
-    let weekStart = startOfWeek(new Date());
-    let calendarMonth = new Date();
+// Home Screen web apps can keep different local storage than Safari.
+// This version marker prevents old cached schedule data from distorting times.
+try {
+  const oldVersion = localStorage.getItem(VERSION_KEY);
+  if (oldVersion !== DASHBOARD_VERSION) {
+    localStorage.removeItem('graycenSummerDashboardSessions_v1');
+    localStorage.removeItem('graycenSummerDashboardSessions_v2');
+    localStorage.setItem(VERSION_KEY, DASHBOARD_VERSION);
+  }
+} catch (e) { console.warn('Version storage skipped', e); }
 
-    function $(id){ return document.getElementById(id); }
+const typeInfo = {
+  Ice:{label:'On-Ice', cls:'ice'},
+  Strength:{label:'Off-ice Workout', cls:'strength'},
+  Shooting:{label:'Shooting', cls:'shooting'},
+  Stickhandling:{label:'Stickhandling', cls:'stick'},
+  Recovery:{label:'Recovery', cls:'other'},
+  Game:{label:'Game', cls:'ice'},
+  Camp:{label:'Camp', cls:'other'},
+  Other:{label:'Other', cls:'other'},
+  Away:{label:'Away', cls:'away'}
+};
 
-    function esc(s){
-      return String(s ?? "").replace(/[&<>"']/g, m => ({
-        "&":"&amp;",
-        "<":"&lt;",
-        ">":"&gt;",
-        '"':"&quot;",
-        "'":"&#39;"
-      }[m]));
+const baseSessions = [
+  {date:'2026-06-01', type:'Ice', start:'12:10 PM', end:'1:10 PM', title:'Abbey', location:'Rosemont Ice Arena', owner:'Parent', minutes:60},
+  {date:'2026-06-02', type:'Ice', start:'11:10 AM', end:'12:10 PM', title:'Abbey', location:'Rosemont Ice Arena', owner:'Parent', minutes:60},
+  {date:'2026-06-03', type:'Ice', start:'4:30 PM', end:'5:30 PM', title:'Delaney', location:'Evanston', owner:'Parent', minutes:60},
+  {date:'2026-06-29', type:'Ice', start:'6:40 PM', end:'8:00 PM', title:'Boudreau', location:'NSIA', owner:'Parent', minutes:80},
+  {date:'2026-07-02', type:'Ice', start:'5:30 PM', end:'6:40 PM', title:'Boudreau', location:'Winnetka', owner:'Parent', minutes:70},
+  {date:'2026-07-13', type:'Ice', start:'6:30 PM', end:'7:50 PM', title:'Boudreau', location:'NSIA', owner:'Parent', minutes:80},
+  {date:'2026-07-16', type:'Ice', start:'5:30 PM', end:'6:40 PM', title:'Boudreau', location:'Winnetka', owner:'Parent', minutes:70},
+  {date:'2026-07-27', type:'Ice', start:'6:30 PM', end:'7:50 PM', title:'Boudreau', location:'NSIA', owner:'Parent', minutes:80},
+  {date:'2026-08-03', type:'Ice', start:'7:00 PM', end:'8:20 PM', title:'Boudreau', location:'NSIA', owner:'Parent', minutes:80},
+  {date:'2026-08-06', type:'Ice', start:'5:30 PM', end:'6:40 PM', title:'Boudreau', location:'Winnetka', owner:'Parent', minutes:70},
+  {date:'2026-08-10', type:'Ice', start:'7:00 PM', end:'8:20 PM', title:'Boudreau', location:'NSIA', owner:'Parent', minutes:80},
+  {date:'2026-06-01', type:'Strength', start:'2:00 PM', end:'3:00 PM', title:'Phil', location:'Mt Prospect IBJ', owner:'Parent', minutes:60},
+  {date:'2026-06-02', type:'Strength', start:'2:00 PM', end:'3:00 PM', title:'Phil', location:'Mt Prospect IBJ', owner:'Parent', minutes:60},
+  {date:'2026-06-04', type:'Strength', start:'9:30 AM', end:'10:30 AM', title:'Phil', location:'Mt Prospect IBJ', owner:'Parent', minutes:60},
+  {date:'2026-06-05', type:'Strength', start:'11:30 AM', end:'12:30 PM', title:'Phil', location:'Mt Prospect IBJ', owner:'Parent', minutes:60},
+  {date:'2026-06-08', type:'Strength', start:'11:30 AM', end:'12:30 PM', title:'Phil', location:'Mt Prospect IBJ', owner:'Parent', minutes:60},
+  {date:'2026-06-09', type:'Strength', start:'2:00 PM', end:'3:00 PM', title:'Phil', location:'Mt Prospect IBJ', owner:'Parent', minutes:60},
+  {date:'2026-06-19', type:'Strength', start:'11:30 AM', end:'12:30 PM', title:'Phil', location:'Mt Prospect IBJ', owner:'Parent', minutes:60},
+  {date:'2026-06-30', type:'Strength', start:'2:00 PM', end:'3:00 PM', title:'Phil', location:'Mt Prospect IBJ', owner:'Parent', minutes:60},
+  {date:'2026-07-01', type:'Strength', start:'2:00 PM', end:'3:00 PM', title:'Phil', location:'Mt Prospect IBJ', owner:'Parent', minutes:60},
+  {date:'2026-07-02', type:'Strength', start:'9:30 AM', end:'10:30 AM', title:'Phil', location:'Mt Prospect IBJ', owner:'Parent', minutes:60},
+  {date:'2026-07-03', type:'Strength', start:'11:30 AM', end:'12:30 PM', title:'Phil', location:'Mt Prospect IBJ', owner:'Parent', minutes:60},
+  {date:'2026-07-13', type:'Strength', start:'2:00 PM', end:'3:00 PM', title:'Phil', location:'Mt Prospect IBJ', owner:'Parent', minutes:60},
+  {date:'2026-07-14', type:'Strength', start:'9:30 AM', end:'10:30 AM', title:'Phil', location:'Mt Prospect IBJ', owner:'Parent', minutes:60},
+  {date:'2026-07-15', type:'Strength', start:'2:00 PM', end:'3:00 PM', title:'Phil', location:'Mt Prospect IBJ', owner:'Parent', minutes:60},
+  {date:'2026-07-16', type:'Strength', start:'9:30 AM', end:'10:30 AM', title:'Phil', location:'Mt Prospect IBJ', owner:'Parent', minutes:60},
+  {date:'2026-07-17', type:'Strength', start:'11:30 AM', end:'12:30 PM', title:'Phil', location:'Mt Prospect IBJ', owner:'Parent', minutes:60},
+  {date:'2026-08-17', type:'Other', start:'All Day', end:'', title:'School starts', location:'School', owner:'Parent', minutes:0}
+];
+
+const awayBlocks = [
+  {start:'2026-06-10', end:'2026-06-10', event:'Chicago / Rochester travel', city:'Chicago / Rochester', limited:true},
+  {start:'2026-06-11', end:'2026-06-14', event:'PIP - Rochester', city:'Rochester', limited:true},
+  {start:'2026-06-15', end:'2026-06-18', event:'Central District', city:'Away', limited:true},
+  {start:'2026-06-21', end:'2026-06-23', event:'Wisconsin', city:'Wisconsin', limited:true},
+  {start:'2026-06-24', end:'2026-06-28', event:'Cwench', city:'Away', limited:true},
+  {start:'2026-07-04', end:'2026-07-11', event:'Costa Rica', city:'Costa Rica', limited:true},
+  {start:'2026-07-19', end:'2026-07-24', event:'Natty Camp', city:'Away', limited:true},
+  {start:'2026-07-28', end:'2026-07-31', event:'Northeastern', city:'Boston', limited:true},
+  {start:'2026-08-04', end:'2026-08-06', event:'Tentative Michigan trip', city:'Michigan', limited:true, tentative:true}
+];
+
+function buildHomeSkills(){
+  const items=[];
+  const start=parseLocalDate('2026-06-01');
+  const end=parseLocalDate('2026-08-14');
+  let counter=0;
+  for(let d=new Date(start); d<=end; d=addDays(d,1)){
+    const day=d.getDay();
+    if(day===0 || day===6) continue;
+    const iso=toISODate(d);
+    if(getAwayBlock(iso)) continue;
+    const type = counter % 2 === 0 ? 'Stickhandling' : 'Shooting';
+    const evening = day===2 || day===4;
+    items.push({date:iso,type,start:evening?'6:30 PM':'9:00 AM',end:evening?'7:00 PM':'9:30 AM',title:type,location:'Home',owner:'Parent',minutes:30,generated:true});
+    counter++;
+  }
+  return items;
+}
+
+let sessions = [...baseSessions, ...buildHomeSkills()].map(normalizeEvent);
+let remoteEvents = [];
+let localAddedEvents = loadLocalAddedEvents();
+let journals = loadJournals();
+let selectedDate = todayLocalISO();
+let displayMonth = parseLocalDate(selectedDate);
+
+function parseLocalDate(value){
+  if(value === null || value === undefined || value === '') return null;
+  if(value instanceof Date) return new Date(value.getFullYear(), value.getMonth(), value.getDate(), 12, 0, 0, 0);
+  if(typeof value === 'number'){
+    // Handles Google Sheets / Excel serial dates without using UTC string parsing.
+    const epoch = new Date(1899, 11, 30, 12, 0, 0, 0);
+    return addDays(epoch, Math.floor(value));
+  }
+  const clean = String(value).trim().split('T')[0].split(' ')[0];
+  const parts = clean.split('-').map(Number);
+  if(parts.length === 3 && parts.every(n => Number.isFinite(n))){
+    const [y,m,d] = parts;
+    return new Date(y, m-1, d, 12, 0, 0, 0);
+  }
+  const slash = clean.split('/').map(Number);
+  if(slash.length === 3 && slash.every(n => Number.isFinite(n))){
+    const [m,d,y] = slash;
+    return new Date(y < 100 ? 2000+y : y, m-1, d, 12, 0, 0, 0);
+  }
+  return null;
+}
+function toISODate(date){
+  return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
+}
+function todayLocalISO(){return toISODate(new Date())}
+function addDays(date, days){const d=new Date(date.getFullYear(),date.getMonth(),date.getDate(),12,0,0,0);d.setDate(d.getDate()+days);return d}
+function addMonths(date, months){const d=new Date(date.getFullYear(),date.getMonth()+months,1,12,0,0,0);return d}
+function sameDate(a,b){return toISODate(a)===toISODate(b)}
+function formatDateHuman(iso){
+  const d=parseLocalDate(iso);
+  if(!d) return '';
+  return d.toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric'});
+}
+function formatLongDate(iso){
+  const d=parseLocalDate(iso);
+  if(!d) return '';
+  return d.toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'});
+}
+function startOfWeek(date){
+  const d=parseLocalDate(toISODate(date));
+  const day=d.getDay();
+  const diff=(day===0?-6:1-day);
+  return addDays(d,diff);
+}
+
+function timeToMinutes(value){
+  if(value === null || value === undefined) return null;
+  if(typeof value === 'number'){
+    if(value >= 0 && value < 1) return Math.round(value*24*60);
+    return Math.round(value);
+  }
+  let s = String(value).trim().toUpperCase();
+  if(!s) return null;
+  if(s === 'ALL DAY' || s === 'ALLDAY') return -1;
+  const numeric = Number(s);
+  if(Number.isFinite(numeric) && numeric >= 0 && numeric < 1) return Math.round(numeric*24*60);
+  let m = s.match(/^(\d{1,2})(?::(\d{2}))?\s*(AM|PM)$/);
+  if(m){
+    let h=Number(m[1]); const min=Number(m[2] || 0); const ap=m[3];
+    if(ap==='AM' && h===12) h=0;
+    if(ap==='PM' && h!==12) h+=12;
+    return h*60+min;
+  }
+  m = s.match(/^(\d{1,2}):(\d{2})$/);
+  if(m) return Number(m[1])*60 + Number(m[2]);
+  return null;
+}
+function minutesToTimeLabel(total){
+  if(total === null || total === undefined) return '';
+  if(total === -1) return 'All Day';
+  let h=Math.floor(total/60), m=total%60;
+  const ap=h>=12?'PM':'AM';
+  h=h%12; if(h===0) h=12;
+  return `${h}:${String(m).padStart(2,'0')} ${ap}`;
+}
+function eventStartDateTime(e){
+  const d=parseLocalDate(e.date);
+  if(!d) return null;
+  const mins=timeToMinutes(e.start);
+  if(mins === null || mins === -1) d.setHours(0,0,0,0);
+  else d.setHours(Math.floor(mins/60), mins%60, 0, 0);
+  return d;
+}
+function formatEventTime(e){
+  const s = minutesToTimeLabel(timeToMinutes(e.start));
+  const en = minutesToTimeLabel(timeToMinutes(e.end));
+  if(s && en && s !== 'All Day') return `${s} – ${en}`;
+  return s || '';
+}
+function calcMinutes(start,end){
+  const s=timeToMinutes(start), e=timeToMinutes(end);
+  if(s===null || e===null || s<0 || e<0) return 0;
+  let diff=e-s;
+  if(diff<0) diff+=24*60;
+  return diff;
+}
+function normalizeType(type){
+  const t=String(type||'Other').trim();
+  const lower=t.toLowerCase();
+  if(['ice','on-ice','on ice','skate','skating'].includes(lower)) return 'Ice';
+  if(['strength','off-ice','off ice','off-ice workout','workout','phil'].includes(lower)) return 'Strength';
+  if(lower.includes('shoot')) return 'Shooting';
+  if(lower.includes('stick')) return 'Stickhandling';
+  if(lower.includes('recover')) return 'Recovery';
+  if(lower.includes('camp')) return 'Camp';
+  if(lower.includes('game')) return 'Game';
+  return t || 'Other';
+}
+function normalizeEvent(row){
+  const dateObj=parseLocalDate(row.date || row.Date || row.startDate || row.day);
+  const date=dateObj ? toISODate(dateObj) : todayLocalISO();
+  const start=row.start || row.startTime || row['Start Time'] || row.time || '';
+  const end=row.end || row.endTime || row['End Time'] || '';
+  const type=normalizeType(row.type || row.Type || row.category || row.Category);
+  const minutes=Number(row.minutes || row.Minutes || calcMinutes(start,end) || 0);
+  return {
+    id: row.id || row.ID || makeEventId(date,start,row.title || row.Title || row.name || ''),
+    date,
+    type,
+    start: String(start || ''),
+    end: String(end || ''),
+    title: row.title || row.Title || row.name || row.Event || typeInfo[type]?.label || type,
+    location: row.location || row.Location || '',
+    owner: row.owner || row.addedBy || row.AddedBy || 'Parent',
+    minutes,
+    notes: row.notes || row.note || row.Notes || '',
+    remote: !!row.remote,
+    generated: !!row.generated
+  };
+}
+function makeEventId(date,start,title){
+  return `${date}|${String(start).trim()}|${String(title).trim()}`.toLowerCase().replace(/[^a-z0-9|]+/g,'-');
+}
+function allSessions(){
+  const map=new Map();
+  [...sessions, ...remoteEvents, ...localAddedEvents].map(normalizeEvent).forEach(e=>{
+    const key=e.id || makeEventId(e.date,e.start,e.title);
+    if(!map.has(key)) map.set(key,e);
+  });
+  return [...map.values()].sort(compareEvents);
+}
+function compareEvents(a,b){
+  if(a.date !== b.date) return a.date.localeCompare(b.date);
+  const am=timeToMinutes(a.start); const bm=timeToMinutes(b.start);
+  return (am ?? 9999) - (bm ?? 9999) || String(a.title).localeCompare(String(b.title));
+}
+
+function getAwayBlock(iso){
+  return awayBlocks.find(b => iso >= b.start && iso <= b.end) || null;
+}
+function eventsForDate(iso){
+  return allSessions().filter(e=>e.date===iso);
+}
+function eventsBetween(startIso,endIso){
+  return allSessions().filter(e=>e.date>=startIso && e.date<=endIso);
+}
+
+function escapeHTML(s){
+  return String(s ?? '').replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
+}
+function typeClass(type){return typeInfo[normalizeType(type)]?.cls || 'other'}
+function typeLabel(type){return typeInfo[normalizeType(type)]?.label || type || 'Other'}
+function shortLabel(e){
+  const t=String(e.title||'').trim();
+  if(['Shooting','Stickhandling'].includes(t)) return t.replace('Stickhandling','Stick');
+  if(t.length <= 12) return t;
+  const first=t.split(/\s+/)[0];
+  return first.length <= 12 ? first : t.slice(0,12);
+}
+function eventCard(e, compact=false){
+  const cls=typeClass(e.type);
+  const time=formatEventTime(e);
+  return `<div class="event ${cls}">
+    <div class="top"><div class="title">${escapeHTML(e.title)}</div><div class="time">${escapeHTML(time)}</div></div>
+    <div class="meta">${escapeHTML(typeLabel(e.type))}${e.location ? ' · '+escapeHTML(e.location) : ''}${e.minutes ? ' · '+e.minutes+' min' : ''}</div>
+    ${(!compact && e.notes) ? `<div class="meta">${escapeHTML(e.notes)}</div>` : ''}
+  </div>`;
+}
+function awayNoticeHTML(iso){
+  const b=getAwayBlock(iso);
+  if(!b) return '';
+  return `<div class="away-notice">Away / limited training: ${escapeHTML(b.event)}${b.tentative?' (tentative)':''}</div>`;
+}
+
+function setSelectedDate(iso){
+  selectedDate=iso;
+  const d=parseLocalDate(iso);
+  displayMonth=new Date(d.getFullYear(),d.getMonth(),1,12,0,0,0);
+  ['selectedDate','selectedDateDay','journalDate','eventDate'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el && !el.value) el.value=iso;
+  });
+  const s1=document.getElementById('selectedDate'); if(s1) s1.value=iso;
+  const s2=document.getElementById('selectedDateDay'); if(s2) s2.value=iso;
+  renderAll();
+}
+function onSelectedDateChange(){setSelectedDate(document.getElementById('selectedDate').value)}
+function syncDayDate(){setSelectedDate(document.getElementById('selectedDateDay').value)}
+function jumpToday(){setSelectedDate(todayLocalISO())}
+function moveDay(n){setSelectedDate(toISODate(addDays(parseLocalDate(selectedDate), n)))}
+function moveWeek(n){setSelectedDate(toISODate(addDays(parseLocalDate(selectedDate), n)))}
+function moveMonth(n){displayMonth=addMonths(displayMonth,n); renderMonth();}
+
+function showView(name){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active', t.dataset.view===name));
+  const view=document.getElementById('view-'+name);
+  if(view) view.classList.add('active');
+  renderAll();
+}
+function toggleLegend(){
+  const card=document.getElementById('legendCard');
+  card.classList.toggle('collapsed');
+  document.getElementById('legendArrow').textContent=card.classList.contains('collapsed')?'Show':'Hide';
+}
+
+function renderAll(){
+  renderNext(); renderDay(); renderWeekList(); renderWeekGrid(); renderMonth(); renderTotals(); renderJournals(); renderUpcoming(); updateMinutesDisplay();
+}
+function renderNext(){
+  const now=new Date();
+  const next=allSessions().map(e=>({e,dt:eventStartDateTime(e)})).filter(x=>x.dt && x.dt >= now).sort((a,b)=>a.dt-b.dt)[0];
+  const card=document.getElementById('nextSessionCard');
+  if(!next){card.innerHTML='<div class="label">Next scheduled session</div><div class="title">—</div><div class="meta">No upcoming sessions found.</div>'; return;}
+  const e=next.e;
+  card.innerHTML=`<div class="label">Next scheduled session</div><div class="title">${escapeHTML(e.title)}</div><div class="meta">${escapeHTML(formatLongDate(e.date))} · ${escapeHTML(formatEventTime(e))}${e.location?' · '+escapeHTML(e.location):''}</div>`;
+}
+function renderDay(){
+  const events=eventsForDate(selectedDate);
+  const title=formatLongDate(selectedDate);
+  ['selectedDayTitle','selectedDayTitleHome'].forEach(id=>document.getElementById(id).textContent=title);
+  document.getElementById('awayNotice').innerHTML=awayNoticeHTML(selectedDate);
+  document.getElementById('awayNoticeHome').innerHTML=awayNoticeHTML(selectedDate);
+  const html=events.length ? events.map(e=>eventCard(e)).join('') : '<div class="empty">No scheduled items for this day.</div>';
+  document.getElementById('dailySessions').innerHTML=html;
+  document.getElementById('dailySessionsHome').innerHTML=html;
+}
+function renderWeekList(){
+  const start=startOfWeek(parseLocalDate(selectedDate));
+  const end=addDays(start,6);
+  const events=eventsBetween(toISODate(start),toISODate(end));
+  const grouped=[];
+  for(let i=0;i<7;i++){
+    const iso=toISODate(addDays(start,i));
+    const dayEvents=events.filter(e=>e.date===iso);
+    if(dayEvents.length || getAwayBlock(iso)){
+      grouped.push(`<div><div class="muted" style="margin:10px 0 6px">${escapeHTML(formatDateHuman(iso))}</div>${awayNoticeHTML(iso)}${dayEvents.map(e=>eventCard(e,true)).join('') || '<div class="empty">No scheduled items.</div>'}</div>`);
     }
-
-    function toYMD(d){
-      return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
-    }
-
-    function parseYMD(s){
-      const [y,m,d] = String(s).split("-").map(Number);
-      return new Date(y,m-1,d);
-    }
-
-    function startOfWeek(d){
-      const x = new Date(d);
-      const day = x.getDay();
-      x.setDate(x.getDate()-day);
-      x.setHours(0,0,0,0);
-      return x;
-    }
-
-    function addDays(d,n){
-      const x = new Date(d);
-      x.setDate(x.getDate()+n);
-      return x;
-    }
-
-    function prettyDate(ymd){
-      if(!ymd) return "";
-      return parseYMD(ymd).toLocaleDateString("en-US",{weekday:"long",month:"long",day:"numeric"});
-    }
-
-    function shortDate(ymd){
-      if(!ymd) return "";
-      return parseYMD(ymd).toLocaleDateString("en-US",{month:"short",day:"numeric"});
-    }
-
-    function colorFor(cat){
-      return categories[cat] || categories.Other;
-    }
-
-    function normalizeType(type){
-      const t = String(type || "").trim();
-      const lower = t.toLowerCase();
-
-      if(lower === "ice" || lower === "on-ice" || lower === "on ice") return "On-ice";
-      if(lower === "strength" || lower === "off-ice" || lower === "off ice" || lower === "off-ice workout" || lower === "off-ice / strength") return "Off-ice";
-      if(lower === "stick handling" || lower === "stickhandling") return "Stickhandling";
-      if(lower === "shooting") return "Shooting";
-      if(lower === "recovery") return "Recovery";
-      if(lower === "away" || lower === "travel") return "Away";
-      if(lower === "mobility" || lower === "conditioning") return "Other";
-
-      return t || "Other";
-    }
-
-    function calendarLabel(e){
-      const title = String(e.title || "").trim();
-      const type = String(e.type || "").trim();
-
-      if(!title) return type || "Event";
-
-      if(title.toLowerCase().includes(" with ")){
-        const afterWith = title.split(/ with /i).pop().trim();
-        const firstName = afterWith.split(/\s+/)[0];
-        if(firstName) return firstName;
-      }
-
-      if(title.toLowerCase().includes(" at ")){
-        const beforeAt = title.split(/ at /i)[0].trim();
-        if(beforeAt) return beforeAt;
-      }
-
-      if(title.length <= 10) return title;
-      if(type) return type;
-      return title.split(" ")[0] || "Event";
-    }
-
-    function eventTime(e){
-      if(e.time && e.end) return `${e.time} – ${e.end}`;
-      if(e.time) return e.time;
-      return "";
-    }
-
-    function timeStringFromParts(prefix){
-      const hour = $(`${prefix}Hour`).value;
-      const minute = $(`${prefix}Minute`).value;
-      const ampm = $(`${prefix}AmPm`).value;
-      if(!hour || !minute || !ampm) return "";
-      return `${Number(hour)}:${minute} ${ampm}`;
-    }
-
-    function minutesFromTimeString(time){
-      if(!time) return null;
-      const match = String(time).trim().match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
-      if(!match) return null;
-
-      let hour = Number(match[1]);
-      const minute = Number(match[2]);
-      const ampm = match[3].toUpperCase();
-
-      if(ampm === "AM" && hour === 12) hour = 0;
-      if(ampm === "PM" && hour !== 12) hour += 12;
-
-      return hour * 60 + minute;
-    }
-
-    function setTimeParts(prefix, time){
-      const match = String(time || "").trim().match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
-
-      if(!match){
-        $(`${prefix}Hour`).value = "";
-        $(`${prefix}Minute`).value = "";
-        $(`${prefix}AmPm`).value = "";
-        return;
-      }
-
-      $(`${prefix}Hour`).value = String(Number(match[1]));
-      $(`${prefix}Minute`).value = match[2];
-      $(`${prefix}AmPm`).value = match[3].toUpperCase();
-    }
-
-    function timeStringFromMinutes(total){
-      total = ((total % 1440) + 1440) % 1440;
-      let hour24 = Math.floor(total / 60);
-      const minute = total % 60;
-      const ampm = hour24 >= 12 ? "PM" : "AM";
-
-      let hour12 = hour24 % 12;
-      if(hour12 === 0) hour12 = 12;
-
-      return `${hour12}:${String(minute).padStart(2,"0")} ${ampm}`;
-    }
-
-    function itemDateTime(item){
-      const d = item.date ? parseYMD(item.date) : new Date();
-      const mins = minutesFromTimeString(item.time);
-
-      if(mins !== null){
-        d.setHours(Math.floor(mins / 60), mins % 60, 0, 0);
-      }else if(String(item.time || "").toLowerCase() === "all day"){
-        d.setHours(23,59,59,0);
-      }else{
-        d.setHours(0,0,0,0);
-      }
-
-      return d;
-    }
-
-    function normalizeRemoteItem(x){
-      const notesRaw = x.notes || x.note || "";
-      let meta = {};
-      if(typeof notesRaw === "string"){
-        try{ meta = JSON.parse(notesRaw); }catch(e){ meta = {note:notesRaw}; }
-      }else if(notesRaw && typeof notesRaw === "object"){
-        meta = notesRaw;
-      }
-
-      const mode = String(x.mode || meta.mode || "").toLowerCase();
-      const addedBy = x.addedBy || meta.addedBy || "";
-      const owner = x.owner || meta.owner || "";
-      const isJournal = x.isJournal || mode === "journal" || owner === "Graycen" || addedBy === "Graycen";
-
-      return {
-        id: x.id || `item-${Date.now()}-${Math.random()}`,
-        date: normalizeDate(x.date || meta.date || ""),
-        time: normalizeTime(x.time || x.startTime || x.start || meta.start || meta.time || ""),
-        end: normalizeTime(x.end || x.endTime || meta.end || ""),
-        title: x.title || meta.title || "Scheduled item",
-        type: normalizeType(x.type || meta.type || "Other"),
-        location: x.location || meta.location || "",
-        minutes: x.minutes || meta.minutes || "",
-        note: meta.note || x.note || "",
-        recovery: String(x.recovery || meta.recovery || "").toLowerCase() === "true" || x.recovery === true || meta.recovery === true,
-        isJournal
-      };
-    }
-
-    function normalizeDate(value){
-      if(!value) return "";
-      const text = String(value).trim();
-      const m = text.match(/^(\d{4}-\d{2}-\d{2})/);
-      if(m) return m[1];
-      const d = new Date(text);
-      if(!isNaN(d.getTime())) return toYMD(d);
-      return text;
-    }
-
-    function normalizeTime(value){
-      if(!value) return "";
-      const text = String(value).trim();
-
-      // Already-clean values from the Sheet should pass through unchanged.
-      if(/^\d{1,2}:\d{2}\s*(AM|PM)$/i.test(text)) return text.replace(/\s+/g," ").toUpperCase();
-      if(text === "Logged" || text === "All Day" || text === "TBD") return text;
-
-      // Google Sheets sometimes sends time-only cells as 1899/1900 Date objects.
-      // In Safari/Chrome those old dates can display 33 minutes early because of
-      // historical timezone offsets. Adjust only those spreadsheet time-only dates.
-      const d = new Date(text);
-      if(!isNaN(d.getTime())){
-        const y = d.getFullYear();
-        if(y <= 1900){
-          const fixed = new Date(d.getTime() + 33 * 60 * 1000);
-          return fixed.toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit"});
-        }
-        return d.toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit"});
-      }
-
-      return text;
-    }
-
-    function buildTimeSelectors(){
-      const hourOptions = [`<option value="">Hour</option>`];
-      for(let h=1; h<=12; h++) hourOptions.push(`<option value="${h}">${h}</option>`);
-
-      const minuteOptions = [`<option value="">Min</option>`];
-      ["00","15","30","45"].forEach(m => minuteOptions.push(`<option value="${m}">${m}</option>`));
-
-      const ampmOptions = `
-        <option value="">AM/PM</option>
-        <option value="AM">AM</option>
-        <option value="PM">PM</option>
-      `;
-
-      ["startHour","endHour"].forEach(id => $(id).innerHTML = hourOptions.join(""));
-      ["startMinute","endMinute"].forEach(id => $(id).innerHTML = minuteOptions.join(""));
-      ["startAmPm","endAmPm"].forEach(id => $(id).innerHTML = ampmOptions);
-    }
-
-    function calculateDuration(){
-      const start = timeStringFromParts("start");
-      const end = timeStringFromParts("end");
-      const startMinutes = minutesFromTimeString(start);
-      const endMinutes = minutesFromTimeString(end);
-
-      if(startMinutes === null || endMinutes === null){
-        $("eventDuration").value = "";
-        $("durationDisplay").textContent = "Choose start and end times";
-        return "";
-      }
-
-      let duration = endMinutes - startMinutes;
-      if(duration < 0) duration += 24 * 60;
-
-      $("eventDuration").value = String(duration);
-      $("durationDisplay").textContent = `${duration} minutes`;
-      return duration;
-    }
-
-    function autofillEndTime(){
-      const start = timeStringFromParts("start");
-      const startMinutes = minutesFromTimeString(start);
-
-      if(startMinutes === null){
-        calculateDuration();
-        return;
-      }
-
-      const end = timeStringFromMinutes(startMinutes + 60);
-      setTimeParts("end", end);
-      calculateDuration();
-    }
-
-    async function api(params){
-      const url = WEB_APP_URL + "?" + new URLSearchParams(params).toString();
-      const res = await fetch(url, {cache:"no-store"});
-      return await res.json();
-    }
-
-    async function loadItems(){
-      try{
-        $("nextMeta").textContent = "Loading schedule...";
-        const data = await api({action:"list", t:Date.now()});
-
-        const rawItems = Array.isArray(data.items)
-          ? data.items
-          : Array.isArray(data.events)
-            ? data.events
-            : [];
-
-        items = rawItems.map(normalizeRemoteItem).filter(x => x.date);
-        events = items.filter(x => !x.isJournal);
-        journals = items.filter(x => x.isJournal);
-
-        events.sort((a,b) => itemDateTime(a) - itemDateTime(b));
-        journals.sort((a,b) => {
-          const dateDiff = parseYMD(b.date || toYMD(new Date())) - parseYMD(a.date || toYMD(new Date()));
-          if(dateDiff !== 0) return dateDiff;
-          return String(b.createdAt || "").localeCompare(String(a.createdAt || ""));
-        });
-
-        renderAll();
-      }catch(err){
-        $("nextTitle").textContent = "Error";
-        $("nextMeta").textContent = "Could not load schedule.";
-        console.error(err);
-      }
-    }
-
-    function renderLegend(){
-      $("legend").innerHTML = Object.entries(categories).map(([name,color]) =>
-        `<span class="pill"><span class="dot" style="background:${color}"></span>${esc(name)}</span>`
-      ).join("");
-
-      $("legendDots").innerHTML = Object.values(categories).slice(0,8).map(color =>
-        `<span class="tinyDot" style="background:${color}"></span>`
-      ).join("");
-
-      const eventCategoryOptions = Object.keys(categories)
-        .map(c => `<option>${esc(c)}</option>`)
-        .join("");
-
-      const journalCategoryOptions = Object.keys(categories)
-        .filter(c => c !== "Away")
-        .map(c => `<option>${esc(c)}</option>`)
-        .join("");
-
-      $("eventCategory").innerHTML = eventCategoryOptions;
-      $("journalCategory").innerHTML = journalCategoryOptions;
-    }
-
-    function toggleLegend(){
-      const legend = $("legend");
-      const text = $("legendToggleText");
-      const hidden = legend.classList.toggle("hiddenLegend");
-      text.textContent = hidden ? "Show" : "Hide";
-    }
-
-    function renderNext(){
-      const now = new Date();
-      const next = events
-        .filter(e => itemDateTime(e) > now)
-        .sort((a,b) => itemDateTime(a)-itemDateTime(b))[0];
-
-      if(!next){
-        $("nextTitle").textContent = "—";
-        $("nextMeta").textContent = "No upcoming sessions";
-        return;
-      }
-
-      $("nextTitle").textContent = next.title || "Scheduled item";
-      $("nextMeta").textContent = `${shortDate(next.date)} · ${eventTime(next) || "Time TBD"} · ${next.location || "Location TBD"}`;
-    }
-
-    function eventCard(e, allowActions=true){
-      const dur = e.minutes
-        ? `<div class="durationBox"><strong>${esc(e.minutes)}</strong><span>min</span></div>`
-        : "";
-
-      const notes = e.note
-        ? `<div class="eventNotes" style="margin-top:12px;background:#f8fafc;border-radius:16px;padding:12px">${esc(e.note)}</div>`
-        : "";
-
-      const actions = allowActions
-        ? `<div class="actions">
-            <button class="btn secondary small" onclick="editEvent('${esc(e.id)}')">Edit</button>
-            <button class="btn danger small" onclick="deleteItemById('${esc(e.id)}')">Delete</button>
-          </div>`
-        : "";
-
-      return `
-        <div class="eventCard">
-          ${dur}
-          <span class="catBadge" style="background:${colorFor(e.type)}">${esc(e.type || "Other")}</span>
-          <div class="eventTitle">${esc(e.title || "Scheduled item")}</div>
-          <div class="eventMeta">${esc(prettyDate(e.date))}${eventTime(e) ? " · " + esc(eventTime(e)) : ""}</div>
-          <div class="eventMeta">${esc(e.location || "")}</div>
-          ${notes}
-          ${actions}
-        </div>
-      `;
-    }
-
-    function journalCard(j){
-      const recovery = j.recovery ? `<div class="eventNotes" style="margin-top:8px;background:#ecfdf3;border-radius:16px;padding:10px">Recovery completed</div>` : "";
-      const note = j.note ? `<div class="eventNotes" style="margin-top:8px;background:#f8fafc;border-radius:16px;padding:10px">${esc(j.note)}</div>` : "";
-
-      return `
-        <div class="eventCard">
-          ${j.minutes ? `<div class="durationBox"><strong>${esc(j.minutes)}</strong><span>min</span></div>` : ""}
-          <span class="catBadge" style="background:${colorFor(j.type)}">${esc(j.type || "Other")}</span>
-          <span class="journalBadge">Journal</span>
-          <div class="eventTitle">${esc(j.title || "Journal entry")}</div>
-          <div class="eventMeta">${esc(prettyDate(j.date))} · Logged</div>
-          <div class="eventMeta">Training journal</div>
-          ${note}
-          ${recovery}
-          <div class="eventNotes" style="margin-top:8px;background:#f8fafc;border-radius:16px;padding:10px">Shared item. For rare edits/deletes, update the Google Sheet row.</div>
-        </div>
-      `;
-    }
-
-    function renderDay(){
-      $("selectedDate").value = selectedDate;
-      $("selectedDayTitle").textContent = prettyDate(selectedDate);
-
-      const dayEvents = events.filter(e => e.date === selectedDate);
-
-      $("dayEvents").innerHTML = dayEvents.length
-        ? dayEvents.map(e => eventCard(e)).join("")
-        : `<div class="status">No events for this day yet.</div>`;
-    }
-
-    function renderDayView(){
-      $("dayViewDate").value = dayViewDate;
-      $("dayViewTitle").textContent = prettyDate(dayViewDate);
-
-      const dayEvents = events.filter(e => e.date === dayViewDate);
-      const dayJournals = journals.filter(j => j.date === dayViewDate);
-
-      $("dayViewEvents").innerHTML = dayEvents.length
-        ? dayEvents.map(e => eventCard(e)).join("")
-        : `<div class="status">No scheduled events for this day.</div>`;
-
-      $("dayViewJournals").innerHTML = dayJournals.length
-        ? dayJournals.map(j => journalCard(j)).join("")
-        : `<div class="status">No training journal entries for this day yet.</div>`;
-    }
-
-    function renderWeek(){
-      const list = [];
-
-      for(let i=0;i<7;i++){
-        const d = addDays(weekStart,i);
-        const ymd = toYMD(d);
-        const count = events.filter(e => e.date === ymd).length;
-
-        list.push(`
-          <div class="weekDay ${ymd===selectedDate?'active':''}" onclick="selectDay('${ymd}')">
-            <span>${d.toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric"})}</span>
-            <span>${count} item${count===1?"":"s"}</span>
-          </div>
-        `);
-      }
-
-      $("weekList").innerHTML = list.join("");
-
-      let full = "";
-
-      for(let i=0;i<7;i++){
-        const d = addDays(weekStart,i);
-        const ymd = toYMD(d);
-        const dayEvents = events.filter(e => e.date === ymd);
-
-        full += `<h3 style="margin-top:18px">${d.toLocaleDateString("en-US",{weekday:"long",month:"long",day:"numeric"})}</h3>`;
-        full += dayEvents.length
-          ? dayEvents.map(e => eventCard(e)).join("")
-          : `<div class="status">No events.</div>`;
-      }
-
-      $("fullWeek").innerHTML = full;
-    }
-
-    function renderCalendar(){
-      const y = calendarMonth.getFullYear();
-      const m = calendarMonth.getMonth();
-
-      $("monthTitle").textContent = calendarMonth.toLocaleDateString("en-US",{month:"long",year:"numeric"});
-
-      const first = new Date(y,m,1);
-      const start = startOfWeek(first);
-
-      let html = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"]
-        .map(d => `<div class="dow">${d}</div>`)
-        .join("");
-
-      for(let i=0;i<42;i++){
-        const d = addDays(start,i);
-        const ymd = toYMD(d);
-        const dayEvents = events.filter(e => e.date === ymd);
-        const muted = d.getMonth() !== m ? "opacity:.35" : "";
-        const today = ymd === toYMD(new Date()) ? "today" : "";
-
-        html += `
-          <div class="dayCell ${today}" style="${muted}" onclick="selectDay('${ymd}','day')">
-            <div class="dayNum">${d.getDate()}</div>
-            ${dayEvents.slice(0,3).map(e => `<div class="miniItem" style="background:${colorFor(e.type)}">${esc(calendarLabel(e))}</div>`).join("")}
-          </div>
-        `;
-      }
-
-      $("monthGrid").innerHTML = html;
-    }
-
-    function renderSummary(){
-      const totalPlanned = events.reduce((sum,e) => sum + (parseInt(e.minutes,10)||0), 0);
-      const totalLogged = journals.reduce((sum,j) => sum + (parseInt(j.minutes,10)||0), 0);
-
-      const stats = [
-        ["Planned Events", events.length],
-        ["Planned Minutes", totalPlanned],
-        ["Journal Entries", journals.length],
-        ["Logged Minutes", totalLogged]
-      ];
-
-      $("summaryGrid").innerHTML = stats.map(([label,val]) =>
-        `<div class="stat"><div class="eyebrow">${label}</div><strong>${val}</strong></div>`
-      ).join("");
-
-      $("categorySummary").innerHTML = Object.keys(categories).map(cat => {
-        const planned = events.filter(e => e.type === cat).length;
-        const logged = journals.filter(j => j.type === cat).length;
-        const loggedMins = journals.filter(j => j.type === cat).reduce((s,j) => s + (parseInt(j.minutes,10)||0), 0);
-        return `<div class="weekDay"><span>${cat}</span><span>${planned} planned · ${logged} logged · ${loggedMins} min</span></div>`;
-      }).join("");
-    }
-
-    function renderJournal(){
-      $("journalEntries").innerHTML = journals.length
-        ? journals.map(j => journalCard(j)).join("")
-        : `<div class="status">No journal entries yet.</div>`;
-    }
-
-    function renderUpcoming(){
-      const now = new Date();
-      const upcoming = events.filter(e => itemDateTime(e) >= now).slice(0,10);
-
-      $("upcomingEvents").innerHTML = upcoming.length
-        ? upcoming.map(e => eventCard(e)).join("")
-        : `<div class="status">No upcoming events yet.</div>`;
-    }
-
-    function renderAll(){
-      renderNext();
-      renderDay();
-      renderDayView();
-      renderWeek();
-      renderCalendar();
-      renderSummary();
-      renderJournal();
-      renderUpcoming();
-    }
-
-    function selectDay(ymd, tab){
-      selectedDate = ymd;
-      dayViewDate = ymd;
-      weekStart = startOfWeek(parseYMD(ymd));
-      renderAll();
-      if(tab) showTab(tab);
-    }
-
-    function shiftDayView(days){
-      dayViewDate = toYMD(addDays(parseYMD(dayViewDate), days));
-      selectedDate = dayViewDate;
-      weekStart = startOfWeek(parseYMD(dayViewDate));
-      renderAll();
-    }
-
-    function showTab(tab){
-      document.querySelectorAll(".tabPage").forEach(p => p.classList.add("hidden"));
-      document.querySelectorAll(".tabBtn").forEach(b => b.classList.remove("active"));
-      $(tab).classList.remove("hidden");
-      document.querySelector(`[data-tab="${tab}"]`).classList.add("active");
-    }
-
-    function clearForm(){
-      $("eventId").value = "";
-      $("formMode").textContent = "New event";
-      $("formTitle").textContent = "Add a scheduled item";
-      $("eventDate").value = selectedDate;
-      $("eventCategory").value = "On-ice";
-      $("eventTitleInput").value = "";
-      setTimeParts("start", "");
-      setTimeParts("end", "");
-      $("eventLocation").value = "";
-      $("eventDuration").value = "";
-      $("durationDisplay").textContent = "Choose start and end times";
-      $("eventNotes").value = "";
-      $("saveStatus").innerHTML = "";
-    }
-
-    function quickAddEventForDay(){
-      selectedDate = dayViewDate;
-      clearForm();
-      $("eventDate").value = dayViewDate;
-      showTab("add");
-      window.scrollTo({top:0,behavior:"smooth"});
-    }
-
-    function quickLogTrainingForDay(){
-      selectedDate = dayViewDate;
-      $("journalDate").value = dayViewDate;
-      showTab("journal");
-      window.scrollTo({top:0,behavior:"smooth"});
-    }
-
-    window.editEvent = function(id){
-      const e = events.find(x => String(x.id) === String(id));
-
-      if(!e){
-        alert("Could not find this event.");
-        return;
-      }
-
-      showTab("add");
-
-      $("eventId").value = e.id;
-      $("formMode").textContent = "Editing event";
-      $("formTitle").textContent = "Edit scheduled item";
-      $("eventDate").value = e.date || selectedDate;
-      $("eventCategory").value = e.type || "Other";
-      $("eventTitleInput").value = e.title || "";
-      setTimeParts("start", e.time || "");
-      setTimeParts("end", e.end || "");
-      $("eventLocation").value = e.location || "";
-      $("eventNotes").value = e.note || "";
-      calculateDuration();
-
-      window.scrollTo({top:0,behavior:"smooth"});
-    }
-
-    window.deleteItemById = async function(id){
-      const item = items.find(x => String(x.id) === String(id));
-
-      if(!item){
-        alert("Could not find this item.");
-        return;
-      }
-
-      if(!confirm(`Delete "${item.title || "this item"}"?`)) return;
-
-      try{
-        await api({action:"delete", id});
-        await loadItems();
-      }catch(err){
-        alert("Delete failed. If this is a shared sheet item, delete that row from the Google Sheet.");
-        console.error(err);
-      }
-    }
-
-    async function saveEvent(){
-      const id = $("eventId").value || "";
-      const time = timeStringFromParts("start");
-      const end = timeStringFromParts("end");
-      const minutes = calculateDuration();
-
-      const params = {
-        action: id ? "update" : "add",
-        mode: "event",
-        id: id || ("event-" + Date.now()),
-        date: $("eventDate").value,
-        time,
-        title: $("eventTitleInput").value,
-        type: $("eventCategory").value,
-        end,
-        location: $("eventLocation").value,
-        minutes: minutes || "",
-        owner: "Parent",
-        note: $("eventNotes").value,
-        addedBy: "Dashboard"
-      };
-
-      params.notes = JSON.stringify({
-        end: params.end,
-        location: params.location,
-        minutes: params.minutes,
-        owner: params.owner,
-        note: params.note,
-        mode: "event"
-      });
-
-      if(!params.date || !params.title){
-        $("saveStatus").innerHTML = `<div class="status">Please add at least a date and title.</div>`;
-        return;
-      }
-
-      $("saveStatus").innerHTML = `<div class="status">Saving...</div>`;
-
-      try{
-        const result = await api(params);
-        if(result.ok === false) throw new Error(result.error || "Save failed");
-
-        $("saveStatus").innerHTML = `<div class="status">Saved.</div>`;
-        selectedDate = params.date;
-        dayViewDate = params.date;
-        clearForm();
-        await loadItems();
-        showTab("day");
-      }catch(err){
-        $("saveStatus").innerHTML = `<div class="status">Save failed. ${esc(err.message || err)}</div>`;
-        console.error(err);
-      }
-    }
-
-    async function saveJournal(){
-      const params = {
-        action: "add",
-        mode: "journal",
-        id: "journal-" + Date.now(),
-        date: $("journalDate").value,
-        title: $("journalTitle").value,
-        type: $("journalCategory").value,
-        minutes: $("journalMinutes").value,
-        location: "Training journal",
-        note: $("journalNote").value,
-        recovery: $("journalRecovery").checked ? "true" : "false",
-        owner: "Graycen",
-        addedBy: "Graycen"
-      };
-
-      params.notes = JSON.stringify({
-        minutes: params.minutes,
-        owner: params.owner,
-        note: params.note,
-        recovery: params.recovery,
-        mode: "journal"
-      });
-
-      if(!params.date || !params.title || !params.minutes){
-        $("journalStatus").innerHTML = `<div class="status">Please add date, minutes, and what you worked on.</div>`;
-        return;
-      }
-
-      $("journalStatus").innerHTML = `<div class="status">Saving journal entry...</div>`;
-
-      try{
-        const result = await api(params);
-        if(result.ok === false) throw new Error(result.error || "Save failed");
-
-        $("journalStatus").innerHTML = `<div class="status">Journal entry saved.</div>`;
-        dayViewDate = params.date;
-        selectedDate = params.date;
-        $("journalTitle").value = "";
-        $("journalMinutes").value = "";
-        $("journalNote").value = "";
-        $("journalRecovery").checked = false;
-        await loadItems();
-      }catch(err){
-        $("journalStatus").innerHTML = `<div class="status">Journal save failed. ${esc(err.message || err)}</div>`;
-        console.error(err);
-      }
-    }
-
-    document.querySelectorAll(".tabBtn").forEach(btn => {
-      btn.addEventListener("click", () => showTab(btn.dataset.tab));
-    });
-
-    $("selectedDate").addEventListener("change", e => selectDay(e.target.value));
-    $("dayViewDate").addEventListener("change", e => selectDay(e.target.value,"day"));
-
-    $("prevDay").addEventListener("click", () => shiftDayView(-1));
-    $("nextDay").addEventListener("click", () => shiftDayView(1));
-
-    $("quickAddEvent").addEventListener("click", quickAddEventForDay);
-    $("quickLogTraining").addEventListener("click", quickLogTrainingForDay);
-    $("viewFullDay").addEventListener("click", () => showTab("day"));
-    $("legendToggle").addEventListener("click", toggleLegend);
-
-    $("prevWeek").addEventListener("click", () => {
-      weekStart = addDays(weekStart,-7);
-      renderAll();
-    });
-
-    $("nextWeek").addEventListener("click", () => {
-      weekStart = addDays(weekStart,7);
-      renderAll();
-    });
-
-    $("prevMonth").addEventListener("click", () => {
-      calendarMonth.setMonth(calendarMonth.getMonth()-1);
-      renderAll();
-    });
-
-    $("nextMonth").addEventListener("click", () => {
-      calendarMonth.setMonth(calendarMonth.getMonth()+1);
-      renderAll();
-    });
-
-    $("saveEvent").addEventListener("click", saveEvent);
-    $("clearForm").addEventListener("click", clearForm);
-    $("saveJournal").addEventListener("click", saveJournal);
-
-    ["startHour","startMinute","startAmPm"].forEach(id => {
-      $(id).addEventListener("change", autofillEndTime);
-    });
-
-    ["endHour","endMinute","endAmPm"].forEach(id => {
-      $(id).addEventListener("change", calculateDuration);
-    });
-
-    renderLegend();
-    buildTimeSelectors();
-
-    $("selectedDate").value = selectedDate;
-    $("dayViewDate").value = dayViewDate;
-    $("eventDate").value = selectedDate;
-    $("journalDate").value = selectedDate;
-
-    clearForm();
-    loadItems();
-    setInterval(loadItems, 60000);
-  </script>
+  }
+  document.getElementById('weekListHome').innerHTML=grouped.join('') || '<div class="empty">No scheduled items this week.</div>';
+}
+function renderWeekGrid(){
+  const start=startOfWeek(parseLocalDate(selectedDate));
+  const end=addDays(start,6);
+  document.getElementById('weekTitle').textContent=`${formatDateHuman(toISODate(start))} – ${formatDateHuman(toISODate(end))}`;
+  const html=[];
+  for(let i=0;i<7;i++){
+    const iso=toISODate(addDays(start,i));
+    const dayEvents=eventsForDate(iso);
+    html.push(`<div class="week-day"><h3>${escapeHTML(formatDateHuman(iso))}</h3>${awayNoticeHTML(iso)}${dayEvents.map(e=>eventCard(e,true)).join('') || '<div class="empty">Open day</div>'}</div>`);
+  }
+  document.getElementById('weekGrid').innerHTML=html.join('');
+}
+function renderMonth(){
+  document.getElementById('monthTitle').textContent=displayMonth.toLocaleDateString(undefined,{month:'long',year:'numeric'});
+  const cal=document.getElementById('monthCalendar');
+  const first=new Date(displayMonth.getFullYear(),displayMonth.getMonth(),1,12,0,0,0);
+  const start=addDays(first, -first.getDay());
+  const today=todayLocalISO();
+  const dows=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const cells=dows.map(d=>`<div class="dow">${d}</div>`);
+  for(let i=0;i<42;i++){
+    const d=addDays(start,i); const iso=toISODate(d);
+    const other=d.getMonth()!==displayMonth.getMonth();
+    const dayEvents=eventsForDate(iso).slice(0,3);
+    const away=getAwayBlock(iso);
+    const chips=[];
+    if(away) chips.push(`<div class="day-chip away">${escapeHTML(away.event)}</div>`);
+    dayEvents.forEach(e=>chips.push(`<div class="day-chip ${typeClass(e.type)}">${escapeHTML(shortLabel(e))}</div>`));
+    const more=eventsForDate(iso).length - dayEvents.length;
+    if(more>0) chips.push(`<div class="day-chip">+${more} more</div>`);
+    cells.push(`<div class="day ${other?'other-month':''} ${iso===today?'today':''} ${iso===selectedDate?'selected':''}" onclick="setSelectedDate('${iso}');showView('day')"><div class="day-num">${d.getDate()}</div>${chips.join('')}</div>`);
+  }
+  cal.innerHTML=cells.join('');
+}
+function renderTotals(){
+  const all=allSessions();
+  const count=t=>all.filter(e=>normalizeType(e.type)===t).length;
+  document.getElementById('scheduledSkatesHome').textContent=count('Ice')+count('Game');
+  document.getElementById('scheduledStrengthHome').textContent=count('Strength');
+  document.getElementById('scheduledShootingHome').textContent=count('Shooting');
+  document.getElementById('scheduledStickHome').textContent=count('Stickhandling');
+  document.getElementById('loggedMinutes').textContent=journals.reduce((sum,j)=>sum+Number(j.minutes||0),0);
+  document.getElementById('journalEntries').textContent=journals.length;
+  let awayDays=0; awayBlocks.forEach(b=>{awayDays += Math.floor((parseLocalDate(b.end)-parseLocalDate(b.start))/(24*60*60*1000))+1;});
+  document.getElementById('awayDays').textContent=awayDays;
+  document.getElementById('homeSkills').textContent=count('Shooting')+count('Stickhandling');
+}
+function renderUpcoming(){
+  const today=todayLocalISO();
+  const upcoming=allSessions().filter(e=>e.date>=today).slice(0,18);
+  document.getElementById('upcomingList').innerHTML=upcoming.length ? upcoming.map(e=>eventCard(e,true)).join('') : '<div class="empty">No upcoming scheduled items.</div>';
+}
+
+function loadJournals(){
+  try { return JSON.parse(localStorage.getItem(JOURNAL_KEY) || '[]'); } catch { return []; }
+}
+function saveJournals(){try{localStorage.setItem(JOURNAL_KEY, JSON.stringify(journals));}catch(e){alert('This browser could not save the journal entry.')}}
+function saveJournalEntry(){
+  const entry={
+    id:'j-'+Date.now(), date:document.getElementById('journalDate').value || selectedDate,
+    type:document.getElementById('journalType').value, minutes:Number(document.getElementById('journalMinutes').value || 0),
+    recovery:document.getElementById('journalRecovery').checked, note:document.getElementById('journalNote').value.trim(), createdAt:new Date().toISOString()
+  };
+  journals.unshift(entry); saveJournals();
+  document.getElementById('journalMinutes').value=''; document.getElementById('journalNote').value=''; document.getElementById('journalRecovery').checked=false;
+  renderAll(); alert('Journal entry saved.');
+}
+function renderJournals(){
+  const rows=journals.slice(0,25).map(j=>`<tr><td>${escapeHTML(formatDateHuman(j.date))}</td><td>${escapeHTML(j.type)}</td><td>${Number(j.minutes||0)}</td><td>${j.recovery?'Yes':'—'}</td><td>${escapeHTML(j.note)}</td></tr>`).join('');
+  const html=rows ? `<table class="journal-table"><thead><tr><th>Date</th><th>Type</th><th>Min</th><th>Recovery</th><th>Note</th></tr></thead><tbody>${rows}</tbody></table>` : '<div class="empty">No journal entries yet.</div>';
+  document.getElementById('journalHistory').innerHTML=html;
+  document.getElementById('journalHistorySummary').innerHTML=html;
+}
+
+function loadLocalAddedEvents(){
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]').map(normalizeEvent); } catch { return []; }
+}
+function saveLocalAddedEvents(){try{localStorage.setItem(STORAGE_KEY, JSON.stringify(localAddedEvents));}catch(e){console.warn(e)}}
+async function loadRemoteEvents(){
+  const status=document.getElementById('remoteStatus');
+  try{
+    const res=await fetch(`${SHEET_WEB_APP_URL}?action=list&v=${Date.now()}`, {cache:'no-store'});
+    const data=await res.json();
+    const rows = Array.isArray(data) ? data : (data.events || data.data || data.rows || []);
+    remoteEvents = rows.map(r=>normalizeEvent({...r, remote:true}));
+    status.textContent = remoteEvents.length ? `Shared schedule loaded: ${remoteEvents.length} item(s).` : 'Shared schedule connected. No added Sheet items found.';
+  }catch(e){
+    console.warn('Shared schedule load failed', e);
+    status.textContent = 'Using built-in schedule. Shared Sheet did not load in this browser.';
+  }
+  renderAll();
+}
+async function postEventToSheet(e){
+  const payload=new URLSearchParams();
+  payload.set('action','addEvent');
+  payload.set('id',e.id);
+  payload.set('date',e.date);
+  payload.set('startTime',e.start);
+  payload.set('endTime',e.end);
+  payload.set('start',e.start);
+  payload.set('end',e.end);
+  payload.set('title',e.title);
+  payload.set('type',e.type);
+  payload.set('location',e.location || '');
+  payload.set('notes',e.notes || '');
+  payload.set('addedBy','Parent');
+  payload.set('minutes',String(e.minutes || 0));
+  payload.set('createdAt',new Date().toISOString());
+  try{
+    await fetch(SHEET_WEB_APP_URL, {method:'POST', mode:'no-cors', headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8'}, body:payload.toString()});
+    return true;
+  }catch(err){ console.warn('Sheet save failed',err); return false; }
+}
+function timeFromParts(prefix){
+  const h=document.getElementById(prefix+'Hour').value;
+  const m=document.getElementById(prefix+'Minute').value;
+  const ap=document.getElementById(prefix+'AmPm').value;
+  if(!h || !m || !ap) return '';
+  return `${h}:${m} ${ap}`;
+}
+function updateMinutesDisplay(){
+  const el=document.getElementById('eventMinutesDisplay'); if(!el) return;
+  const start=timeFromParts('eventStart'), end=timeFromParts('eventEnd');
+  const mins=calcMinutes(start,end);
+  el.textContent = start && end ? `${mins} minutes` : 'Choose start and end times';
+}
+function addEvent(){
+  const date=document.getElementById('eventDate').value || selectedDate;
+  const title=document.getElementById('eventTitle').value.trim();
+  if(!date || !title){alert('Please enter a date and title.'); return;}
+  const start=timeFromParts('eventStart'), end=timeFromParts('eventEnd');
+  const e=normalizeEvent({id:'local-'+Date.now(), date, type:document.getElementById('eventType').value, start, end, title, location:document.getElementById('eventLocation').value.trim(), owner:'Parent', minutes:calcMinutes(start,end)});
+  localAddedEvents.push(e); saveLocalAddedEvents(); renderAll();
+  postEventToSheet(e).then(ok=>{ alert(ok ? 'Event added. It was also sent to the shared Google Sheet.' : 'Event added locally, but the Google Sheet save may not have completed.'); });
+  document.getElementById('eventTitle').value=''; document.getElementById('eventLocation').value='';
+}
+
+function exportDashboardData(){
+  const data=JSON.stringify({version:DASHBOARD_VERSION, localAddedEvents, journals}, null, 2);
+  const blob=new Blob([data],{type:'application/json'}); const url=URL.createObjectURL(blob); const a=document.createElement('a');
+  a.href=url; a.download='graycen-training-dashboard-backup.json'; a.click(); URL.revokeObjectURL(url);
+}
+function resetDashboardData(){
+  if(confirm('This will delete journal entries and locally added events saved on this device. Continue?')){
+    localAddedEvents=[]; journals=[]; saveLocalAddedEvents(); saveJournals(); renderAll();
+  }
+}
+
+function fillHourSelects(){
+  ['eventStartHour','eventEndHour'].forEach(id=>{const sel=document.getElementById(id); for(let i=1;i<=12;i++){const o=document.createElement('option');o.value=String(i);o.textContent=String(i);sel.appendChild(o);}});
+  ['eventStartHour','eventStartMinute','eventStartAmPm','eventEndHour','eventEndMinute','eventEndAmPm'].forEach(id=>document.getElementById(id).addEventListener('change',updateMinutesDisplay));
+}
+function init(){
+  fillHourSelects();
+  const today=todayLocalISO();
+  selectedDate=today; displayMonth=parseLocalDate(today);
+  ['selectedDate','selectedDateDay','journalDate','eventDate'].forEach(id=>{const el=document.getElementById(id); if(el) el.value=today;});
+  renderAll(); loadRemoteEvents();
+}
+window.addEventListener('DOMContentLoaded', init);
+</script>
 </body>
 </html>
