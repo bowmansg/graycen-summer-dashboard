@@ -27,8 +27,10 @@
       --ice:#39ff14;
       --ice-soft:#eaffea;
       --ice-ink:#0a3b05;
-      --strength:#1f55d6;
-      --strength-soft:#e5ecff;
+      --strength:#8b5cf6;
+      --strength-soft:#f1eaff;
+      --recovery:#35c99b;
+      --recovery-soft:#e7fff7;
       --shooting:#ff8a00;
       --shooting-soft:#fff0df;
       --stick:#f4c430;
@@ -58,21 +60,23 @@
     }
     .hero:before{content:"";position:absolute;right:-90px;top:-120px;width:320px;height:320px;border-radius:50%;background:rgba(57,255,20,.16);filter:blur(2px)}
     .hero-inner{position:relative;z-index:1}
+    .hero-grid{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:22px;align-items:center}
     .hero-main{display:flex;gap:18px;align-items:center}
-    .logo-box{width:110px;height:100px;border-radius:24px;background:rgba(255,255,255,.92);display:flex;align-items:center;justify-content:center;padding:10px;box-shadow:0 10px 30px rgba(0,0,0,.12);flex:0 0 auto}
-    .logo-fallback{width:78px;height:78px;border-radius:22px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#113d2a,#39ff14);color:white;font-weight:900;font-size:42px;letter-spacing:-2px}
-    .mission-logo{width:92px;height:92px;object-fit:contain;display:block}
-    .eyebrow{display:inline-flex;background:rgba(57,255,20,.17);border:1px solid rgba(57,255,20,.36);border-radius:999px;padding:6px 12px;font-size:13px;font-weight:900;margin-bottom:12px;color:#ecffe8}
-    h1{font-size:43px;line-height:.98;margin:0;font-weight:900;letter-spacing:-1.5px}
-    .hero-lead{color:#efece8;line-height:1.45;margin:16px 0 0;font-size:18px;font-weight:650;max-width:840px}
-    .hero-tools{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:14px;width:100%}
-    .hero-tool{border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.10);border-radius:16px;padding:10px 12px;text-align:center}
+    .logo-box{width:94px;height:86px;border-radius:22px;background:rgba(255,255,255,.94);display:flex;align-items:center;justify-content:center;padding:10px;box-shadow:0 10px 30px rgba(0,0,0,.12);flex:0 0 auto}
+    .logo-fallback{width:72px;height:72px;border-radius:20px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#113d2a,#39ff14);color:white;font-weight:900;font-size:38px;letter-spacing:-2px}
+    .mission-logo{width:76px;height:76px;object-fit:contain;display:block}
+    .hero-name{display:grid;gap:0}
+    h1{font-size:46px;line-height:.95;margin:0;font-weight:900;letter-spacing:-1.5px}
+    .hero-subtitle{font-size:30px;line-height:1.05;font-weight:650;color:#fff;margin-top:4px}
+    .hero-lead{color:#efece8;line-height:1.45;margin:24px 0 0;font-size:18px;font-weight:700;max-width:720px}
+    .hero-tools{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:22px;width:100%}
+    .hero-tool{border:1px solid rgba(255,255,255,.20);background:rgba(255,255,255,.10);border-radius:16px;padding:12px 12px;text-align:center}
     .hero-tool span{display:block;color:var(--ice);font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.08em;margin-bottom:3px}
     .hero-tool strong{font-size:14px;color:#fff}
-    .next-card{margin-top:16px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);border-radius:22px;padding:14px 16px;display:grid;gap:4px}
-    .next-card .label{color:#d8fbd1;text-transform:uppercase;font-weight:900;font-size:12px;letter-spacing:.08em}
-    .next-card .title{font-size:22px;font-weight:900;line-height:1.1}
-    .next-card .meta{color:#f1f1ed;font-size:14px;line-height:1.35}
+    .next-card{background:#fff;border:3px solid rgba(57,255,20,.75);border-radius:22px;padding:18px 20px;display:grid;gap:6px;color:#101828;box-shadow:0 12px 30px rgba(0,0,0,.18)}
+    .next-card .label{color:var(--warm2);text-transform:uppercase;font-weight:900;font-size:12px;letter-spacing:.08em}
+    .next-card .title{font-size:28px;font-weight:900;line-height:1.05;color:#111827}
+    .next-card .meta{color:#4b5563;font-size:15px;line-height:1.35;font-weight:750}
     .tabs{position:sticky;top:0;z-index:10;background:rgba(255,255,255,.94);backdrop-filter:blur(10px);display:grid;grid-template-columns:repeat(7,1fr);gap:7px;border:1px solid var(--line);border-radius:22px;padding:7px;margin-bottom:14px;box-shadow:0 8px 24px rgba(0,0,0,.05)}
     .tab{border:0;border-radius:16px;background:transparent;color:#333;padding:12px 8px;font-weight:900;cursor:pointer;font-size:13px}
     .tab.active{background:var(--warm);color:#fff}
@@ -82,7 +86,7 @@
     .legend-card.collapsed .legend-body{display:none}
     .pill{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:999px;background:#fff;padding:7px 10px;font-size:12px;font-weight:900;white-space:nowrap}
     .dot{width:10px;height:10px;border-radius:999px;display:inline-block;background:#bbb}
-    .dot.ice{background:var(--ice)} .dot.strength{background:var(--strength)} .dot.shooting{background:var(--shooting)} .dot.stick{background:var(--stick)} .dot.away{background:var(--away)} .dot.other{background:#8b8b8b}
+    .dot.ice{background:var(--ice)} .dot.strength{background:var(--strength)} .dot.shooting{background:var(--shooting)} .dot.stick{background:var(--stick)} .dot.recovery{background:var(--recovery)} .dot.away{background:var(--away)} .dot.other{background:#8b8b8b}
     main{display:block}
     .view{display:none}
     .view.active{display:block}
@@ -108,6 +112,7 @@
     .event.strength{border-left-color:var(--strength);background:linear-gradient(90deg,var(--strength-soft),#fff 42%)}
     .event.shooting{border-left-color:var(--shooting);background:linear-gradient(90deg,var(--shooting-soft),#fff 42%)}
     .event.stick{border-left-color:var(--stick);background:linear-gradient(90deg,var(--stick-soft),#fff 42%)}
+    .event.recovery{border-left-color:var(--recovery);background:linear-gradient(90deg,var(--recovery-soft),#fff 42%)}
     .event.away{border-left-color:var(--away);background:linear-gradient(90deg,var(--away-soft),#fff 42%)}
     .event .top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
     .event .title{font-weight:900;font-size:16px;line-height:1.15}
@@ -133,6 +138,7 @@
     .day-chip.strength{background:var(--strength);color:#fff}
     .day-chip.shooting{background:var(--shooting);color:#fff}
     .day-chip.stick{background:var(--stick);color:#3f3100}
+    .day-chip.recovery{background:var(--recovery);color:#064e3b}
     .day-chip.away{background:var(--away);color:#fff}
     .week-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:8px}
     .week-day{border:1px solid var(--line);border-radius:18px;background:#fff;padding:10px;min-height:260px}
@@ -145,6 +151,25 @@
     .status{font-size:12px;color:var(--muted);font-weight:800;margin-top:8px}
 
     .detail-overlay{position:fixed;inset:0;background:rgba(0,0,0,.48);z-index:999;display:none;align-items:center;justify-content:center;padding:16px}
+
+    .journal-cards{display:grid;gap:10px}
+    .journal-entry-card{border:1px solid var(--line);border-radius:18px;background:#fff;padding:14px 16px;display:grid;grid-template-columns:1fr auto;gap:12px;align-items:start;box-shadow:0 6px 18px rgba(0,0,0,.035)}
+    .journal-entry-card .journal-top{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px;align-items:center}
+    .journal-entry-card .journal-pill{border-radius:999px;padding:6px 10px;font-size:11px;font-weight:900;color:#fff;background:#999;display:inline-flex;align-items:center}
+    .journal-entry-card .journal-pill.ice{background:var(--ice);color:var(--ice-ink)}
+    .journal-entry-card .journal-pill.strength{background:var(--strength);color:#fff}
+    .journal-entry-card .journal-pill.shooting{background:var(--shooting);color:#fff}
+    .journal-entry-card .journal-pill.stick{background:var(--stick);color:#3f3100}
+    .journal-entry-card .journal-pill.away{background:var(--away);color:#fff}
+    .journal-entry-card .journal-pill.recovery{background:var(--recovery);color:#064e3b}
+    .journal-entry-card .journal-tag{background:var(--journal);color:var(--journal-ink);border-radius:999px;padding:6px 10px;font-size:11px;font-weight:900}
+    .journal-entry-card .journal-title{font-size:20px;font-weight:900;letter-spacing:-.25px;line-height:1.1;margin-bottom:4px}
+    .journal-entry-card .journal-meta{font-size:13px;color:var(--muted);font-weight:800;line-height:1.35}
+    .journal-entry-card .journal-note{margin-top:10px;background:var(--soft);border-radius:14px;padding:10px;color:#5b6472;font-weight:750;line-height:1.35}
+    .minute-badge{min-width:64px;border-radius:17px;background:#f3f4f7;padding:12px;text-align:center;font-weight:900;color:#111827}
+    .minute-badge strong{display:block;font-size:24px;line-height:1}
+    .minute-badge span{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:#667085}
+    .week-day .away-notice{font-size:13px;line-height:1.18;padding:10px;min-height:auto}
     .detail-overlay.open{display:flex}
     .detail-panel{width:min(560px,100%);max-height:90vh;overflow:auto;background:#fff;border-radius:26px;padding:18px;box-shadow:0 24px 80px rgba(0,0,0,.28)}
     .detail-panel h2{margin:0 0 8px;font-size:24px;letter-spacing:-.4px}
@@ -154,8 +179,8 @@
     .detail-actions{display:flex;gap:10px;margin-top:14px}
     @media(max-width:860px){
       .wrap{padding:12px}
-      .hero{padding:18px;border-radius:26px}.hero-main{gap:12px}.logo-box{width:78px;height:72px;border-radius:18px}.logo-fallback{width:56px;height:56px;border-radius:16px;font-size:30px}.mission-logo{width:64px;height:64px}
-      h1{font-size:33px}.eyebrow{font-size:11px;margin-bottom:8px}.hero-lead{font-size:14px}.hero-tools{gap:6px}.hero-tool{padding:8px 7px;border-radius:13px}.hero-tool span{font-size:9px}.hero-tool strong{font-size:10px}
+      .hero{padding:18px;border-radius:26px}.hero-grid{grid-template-columns:1fr;gap:14px}.hero-main{gap:12px}.logo-box{width:86px;height:78px;border-radius:18px}.logo-fallback{width:60px;height:60px;border-radius:16px;font-size:30px}.mission-logo{width:68px;height:68px}
+      h1{font-size:38px}.hero-subtitle{font-size:25px}.hero-lead{font-size:15px;margin-top:18px}.hero-tools{gap:6px;margin-top:16px}.hero-tool{padding:9px 7px;border-radius:13px}.hero-tool span{font-size:9px}.hero-tool strong{font-size:10px}.next-card{padding:16px;border-radius:20px}.next-card .title{font-size:26px}
       .tabs{grid-template-columns:repeat(4,1fr);gap:5px;border-radius:18px}.tab{font-size:12px;padding:10px 4px}
       .section,.form-grid{grid-template-columns:1fr}.quick{grid-template-columns:repeat(2,1fr)}.calendar{gap:4px}.day{min-height:92px;border-radius:12px;padding:5px}.day-chip{font-size:7.8px;padding:3px 4px}.dow{font-size:10px}.card{padding:15px}.week-grid{grid-template-columns:1fr}.week-day{min-height:unset}
       .legend-card{border-radius:18px}.journal-table{font-size:12px}
@@ -165,19 +190,21 @@
 <body>
   <div class="wrap">
     <header class="hero">
-      <div class="hero-inner">
-        <div class="hero-main">
-          <div class="logo-box"><img class="mission-logo" src="https://chicagomission.com/wp-content/uploads/2026/05/Mission_Logo_2026-150x150-1.png" alt="Chicago Mission logo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';"><div class="logo-fallback" style="display:none">G</div></div>
-          <div>
-            <div class="eyebrow">Graycen</div>
-            <h1>Summer<br>Training</h1>
+      <div class="hero-inner hero-grid">
+        <div class="hero-left">
+          <div class="hero-main">
+            <div class="logo-box"><img class="mission-logo" src="mission-logo.png" alt="Chicago Mission logo" onerror="this.onerror=null;this.src='https://chicagomission.com/wp-content/uploads/2026/05/Mission_Logo_2026-150x150-1.png';"><div class="logo-fallback" style="display:none">G</div></div>
+            <div class="hero-name">
+              <h1>Graycen</h1>
+              <div class="hero-subtitle">Summer Training</div>
+            </div>
           </div>
-        </div>
-        <p class="hero-lead">Your summer training hub. Check your schedule, stay on top of the week ahead, and log the work that helps you get better — one day at a time.</p>
-        <div class="hero-tools">
-          <div class="hero-tool"><span>Plan</span><strong>Day · Week · Month</strong></div>
-          <div class="hero-tool"><span>Train</span><strong>Ice · Off-Ice · Skills</strong></div>
-          <div class="hero-tool"><span>Log</span><strong>What you trained</strong></div>
+          <p class="hero-lead">Your summer training hub. Check your schedule, stay on top of the week ahead, and log the work that helps you get better — one day at a time.</p>
+          <div class="hero-tools">
+            <div class="hero-tool"><span>Plan</span><strong>Day · Week · Month</strong></div>
+            <div class="hero-tool"><span>Train</span><strong>Ice · Off-Ice · Skills</strong></div>
+            <div class="hero-tool"><span>Log</span><strong>What you trained</strong></div>
+          </div>
         </div>
         <div class="next-card" id="nextSessionCard">
           <div class="label">Next scheduled session</div>
@@ -203,8 +230,10 @@
         <span class="pill"><span class="dot ice"></span>On-ice</span>
         <span class="pill"><span class="dot strength"></span>Off-ice</span>
         <span class="pill"><span class="dot shooting"></span>Shooting</span>
-        <span class="pill"><span class="dot stick"></span>Stick handling</span>
+        <span class="pill"><span class="dot stick"></span>Stickhandling</span>
+        <span class="pill"><span class="dot recovery"></span>Recovery</span>
         <span class="pill"><span class="dot away"></span>Away</span>
+        <span class="pill"><span class="dot other"></span>Other</span>
       </div>
     </section>
 
@@ -323,9 +352,11 @@
               <input type="date" id="journalDate" class="full">
               <select id="journalType">
                 <option>On-Ice</option>
+                <option>Off-ice</option>
                 <option>Shooting</option>
                 <option>Stickhandling</option>
-                <option>Off-ice Workout</option>
+                <option>Recovery</option>
+                <option>Away</option>
                 <option>Other</option>
               </select>
               <input type="number" id="journalMinutes" min="0" step="5" placeholder="Minutes">
@@ -351,13 +382,12 @@
             <div class="form-grid">
               <input type="date" id="eventDate" class="full" required>
               <select id="eventType">
-                <option value="Ice">Ice</option>
-                <option value="Strength">Strength</option>
+                <option value="Ice">On-ice</option>
+                <option value="Strength">Off-ice</option>
                 <option value="Shooting">Shooting</option>
                 <option value="Stickhandling">Stickhandling</option>
                 <option value="Recovery">Recovery</option>
-                <option value="Game">Game</option>
-                <option value="Camp">Camp</option>
+                <option value="Away">Away</option>
                 <option value="Other">Other</option>
               </select>
               <input id="eventLocation" placeholder="Location">
@@ -409,7 +439,7 @@
 <script>
 'use strict';
 
-const DASHBOARD_VERSION = 'graycen-recovery-2026-06-07-v2-detail-tap';
+const DASHBOARD_VERSION = 'graycen-visual-align-2026-06-07-v1';
 const STORAGE_KEY = 'graycenSummerDashboardSessions_recovery_v1';
 const JOURNAL_KEY = 'graycenSummerDashboardJournal_timefix_v5';
 const VERSION_KEY = 'graycenSummerDashboardVersion';
@@ -431,10 +461,10 @@ try {
 
 const typeInfo = {
   Ice:{label:'On-Ice', cls:'ice'},
-  Strength:{label:'Off-ice Workout', cls:'strength'},
+  Strength:{label:'Off-ice', cls:'strength'},
   Shooting:{label:'Shooting', cls:'shooting'},
   Stickhandling:{label:'Stickhandling', cls:'stick'},
-  Recovery:{label:'Recovery', cls:'other'},
+  Recovery:{label:'Recovery', cls:'recovery'},
   Game:{label:'Game', cls:'ice'},
   Camp:{label:'Camp', cls:'other'},
   Other:{label:'Other', cls:'other'},
@@ -642,6 +672,7 @@ function normalizeType(type){
   if(lower.includes('shoot')) return 'Shooting';
   if(lower.includes('stick')) return 'Stickhandling';
   if(lower.includes('recover')) return 'Recovery';
+  if(lower.includes('away') || lower.includes('travel')) return 'Away';
   if(lower.includes('camp')) return 'Camp';
   if(lower.includes('game')) return 'Game';
   return t || 'Other';
@@ -861,10 +892,11 @@ function closeEventDetailFromBackdrop(event){
 document.addEventListener('keydown', function(event){
   if(event.key === 'Escape') closeEventDetail();
 });
-function awayNoticeHTML(iso){
+function awayNoticeHTML(iso, compact=false){
   const b=getAwayBlock(iso);
   if(!b) return '';
-  return `<div class="away-notice">Away / limited training: ${escapeHTML(b.event)}${b.tentative?' (tentative)':''}</div>`;
+  const label = compact ? (b.event || b.city || 'Away') : `Away / limited training: ${b.event}${b.tentative?' (tentative)':''}`;
+  return `<div class="away-notice">${escapeHTML(label)}</div>`;
 }
 
 function setSelectedDate(iso){
@@ -942,7 +974,7 @@ function renderWeekGrid(){
   for(let i=0;i<7;i++){
     const iso=toISODate(addDays(start,i));
     const dayEvents=eventsForDate(iso);
-    html.push(`<div class="week-day"><h3>${escapeHTML(formatDateHuman(iso))}</h3>${awayNoticeHTML(iso)}${dayEvents.map(e=>eventCard(e,true)).join('') || '<div class="empty">Open day</div>'}</div>`);
+    html.push(`<div class="week-day"><h3>${escapeHTML(formatDateHuman(iso))}</h3>${awayNoticeHTML(iso,true)}${dayEvents.map(e=>eventCard(e,true)).join('') || '<div class="empty">Open day</div>'}</div>`);
   }
   document.getElementById('weekGrid').innerHTML=html.join('');
 }
@@ -1033,10 +1065,25 @@ function saveJournalEntry(){
   document.getElementById('journalMinutes').value=''; document.getElementById('journalNote').value=''; document.getElementById('journalRecovery').checked=false;
   renderAll(); alert('Journal entry saved.');
 }
+function journalCard(j){
+  const cls = typeClass(j.type);
+  const note = String(j.note || '').trim();
+  const title = note || typeLabel(j.type) || 'Journal entry';
+  const recovery = j.recovery ? ' · Recovery completed' : '';
+  return `<div class="journal-entry-card">
+    <div>
+      <div class="journal-top"><span class="journal-pill ${cls}">${escapeHTML(typeLabel(j.type))}</span><span class="journal-tag">Journal</span></div>
+      <div class="journal-title">${escapeHTML(title)}</div>
+      <div class="journal-meta">${escapeHTML(formatDateHuman(j.date))} · Logged${recovery}</div>
+      ${note ? `<div class="journal-note">${escapeHTML(note)}</div>` : ''}
+    </div>
+    <div class="minute-badge"><strong>${Number(j.minutes||0)}</strong><span>min</span></div>
+  </div>`;
+}
 function renderJournals(){
   const allJournals=combinedJournals();
-  const rows=allJournals.slice(0,25).map(j=>`<tr><td>${escapeHTML(formatDateHuman(j.date))}</td><td>${escapeHTML(j.type)}</td><td>${Number(j.minutes||0)}</td><td>${j.recovery?'Yes':'—'}</td><td>${escapeHTML(j.note)}</td></tr>`).join('');
-  const html=rows ? `<table class="journal-table"><thead><tr><th>Date</th><th>Type</th><th>Min</th><th>Recovery</th><th>Note</th></tr></thead><tbody>${rows}</tbody></table>` : '<div class="empty">No journal entries yet.</div>';
+  const cards=allJournals.slice(0,25).map(journalCard).join('');
+  const html=cards ? `<div class="journal-cards">${cards}</div>` : '<div class="empty">No journal entries yet.</div>';
   document.getElementById('journalHistory').innerHTML=html;
   document.getElementById('journalHistorySummary').innerHTML=html;
 }
