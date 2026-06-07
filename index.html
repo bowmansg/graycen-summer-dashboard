@@ -386,9 +386,9 @@
 <script>
 'use strict';
 
-const DASHBOARD_VERSION = 'graycen-timefix-2026-06-06-v4';
-const STORAGE_KEY = 'graycenSummerDashboardSessions_timefix_v4';
-const JOURNAL_KEY = 'graycenSummerDashboardJournal_timefix_v4';
+const DASHBOARD_VERSION = 'graycen-timefix-2026-06-06-v5';
+const STORAGE_KEY = 'graycenSummerDashboardSessions_timefix_v5';
+const JOURNAL_KEY = 'graycenSummerDashboardJournal_timefix_v5';
 const VERSION_KEY = 'graycenSummerDashboardVersion';
 const SHEET_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbw7-sHB4RcEVRg_GYjv_QnkUCi8-SH6X0nryXqqnnzev2fiUFJLrKef5CvIDKts9BotRw/exec';
 
@@ -565,14 +565,13 @@ function timeToMinutes(value){
 
   // Google Sheets sometimes returns time-only cells as Dec 30 1899 date/time strings.
   // Extract the time manually instead of letting Safari/Home Screen reinterpret it.
-  m = s.match(/(?:1899|1900)[^T
-]*T(\d{2}):(\d{2})/i);
+  m = s.match(/(?:1899|1900)[^T\n]*T(\d{2}):(\d{2})/i);
   if(m){
     let mins = Number(m[1])*60 + Number(m[2]);
     if(/Z\s*$/i.test(s)) mins = (mins - 360 + 1440) % 1440; // Sheet time-only UTC serialization from Central time.
     return mins;
   }
-  m = s.match(/(?:1899|1900).*?(\d{1,2}):(\d{2})(?::\d{2})?/i);
+  m = s.match(/(?:1899|1900).*?(\d{1,2}):(\d{2})(?::\d{2})?/i);
   if(m) return Number(m[1])*60 + Number(m[2]);
 
   return null;
