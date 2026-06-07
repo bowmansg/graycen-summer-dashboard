@@ -144,6 +144,7 @@
     .week-day{border:1px solid var(--line);border-radius:18px;background:#fff;padding:10px;min-height:260px}
     .week-day h3{font-size:14px;margin:0 0 8px;line-height:1.2}
     .week-day .event{border-radius:13px;padding:8px;border-left-width:5px;margin-bottom:7px}
+    .week-day .event.compact-away{min-height:auto;background:linear-gradient(90deg,var(--away-soft),#fff 42%)}
     .week-day .event .title{font-size:12px}.week-day .event .meta,.week-day .event .time{font-size:11px}
     .journal-table{width:100%;border-collapse:collapse;font-size:13px}
     .journal-table th,.journal-table td{text-align:left;border-bottom:1px solid var(--line);padding:9px 6px;vertical-align:top}
@@ -894,8 +895,14 @@ document.addEventListener('keydown', function(event){
 function awayNoticeHTML(iso, compact=false){
   const b=getAwayBlock(iso);
   if(!b) return '';
-  const label = compact ? (b.event || b.city || 'Away') : `Away / limited training: ${b.event}${b.tentative?' (tentative)':''}`;
-  return `<div class="away-notice">${escapeHTML(label)}</div>`;
+  const label = b.event || b.city || 'Away';
+  if(compact){
+    return `<div class="event away compact-away" role="button" tabindex="0" onclick="setSelectedDate('${iso}');showView('day')">
+      <div class="top"><div class="title">${escapeHTML(label)}</div><div class="time">All Day</div></div>
+      <div class="meta">Away${b.city ? ' · '+escapeHTML(b.city) : ''}${b.tentative ? ' · tentative' : ''}</div>
+    </div>`;
+  }
+  return `<div class="away-notice">Away / limited training: ${escapeHTML(label)}${b.tentative?' (tentative)':''}</div>`;
 }
 
 function setSelectedDate(iso){
