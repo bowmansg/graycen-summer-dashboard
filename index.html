@@ -406,7 +406,8 @@
                 <option value="Other">Other</option>
               </select>
               <input id="eventLocation" placeholder="Location">
-              <div>
+              <label class="full" style="display:flex;gap:8px;align-items:center;font-weight:900"><input type="checkbox" id="eventAllDay" style="width:auto" onchange="toggleAllDayEvent()"> All-day event</label>
+              <div id="eventStartWrap">
                 <div class="field-label">Start time</div>
                 <div class="time-row">
                   <select id="eventStartHour"><option value="">Hour</option></select>
@@ -414,7 +415,7 @@
                   <select id="eventStartAmPm"><option value="">AM/PM</option><option>AM</option><option>PM</option></select>
                 </div>
               </div>
-              <div>
+              <div id="eventEndWrap">
                 <div class="field-label">End time</div>
                 <div class="time-row">
                   <select id="eventEndHour"><option value="">Hour</option></select>
@@ -1189,8 +1190,32 @@ function timeFromParts(prefix){
   if(!h || !m || !ap) return '';
   return `${h}:${m} ${ap}`;
 }
+function addOneHourToTimeLabel(value){
+  const mins=timeToMinutes(value);
+  if(mins === null || mins < 0) return '';
+  return minutesToTimeLabel((mins + 60) % (24*60));
+}
+function hasTimeParts(prefix){
+  return !!(document.getElementById(prefix+'Hour').value && document.getElementById(prefix+'Minute').value && document.getElementById(prefix+'AmPm').value);
+}
+function toggleAllDayEvent(){
+  const allDay = !!document.getElementById('eventAllDay')?.checked;
+  ['eventStartWrap','eventEndWrap'].forEach(id=>{const el=document.getElementById(id); if(el) el.style.display = allDay ? 'none' : 'block';});
+  ['eventStartHour','eventStartMinute','eventStartAmPm','eventEndHour','eventEndMinute','eventEndAmPm'].forEach(id=>{const el=document.getElementById(id); if(el) el.disabled = allDay;});
+  updateMinutesDisplay();
+}
+function maybeDefaultEndTime(){
+  const allDay = !!document.getElementById('eventAllDay')?.checked;
+  if(allDay) return;
+  const start = timeFromParts('eventStart');
+  if(!start) { updateMinutesDisplay(); return; }
+  if(!hasTimeParts('eventEnd')) setTimeParts('eventEnd', addOneHourToTimeLabel(start));
+  updateMinutesDisplay();
+}
 function updateMinutesDisplay(){
   const el=document.getElementById('eventMinutesDisplay'); if(!el) return;
+  const allDay = !!document.getElementById('eventAllDay')?.checked;
+  if(allDay){ el.textContent = 'All-day event'; return; }
   const start=timeFromParts('eventStart'), end=timeFromParts('eventEnd');
   const mins=calcMinutes(start,end);
   el.textContent = start && end ? `${mins} minutes` : 'Choose start and end times';
@@ -1199,10 +1224,11 @@ function clearEventForm(){
   editingEventId='';
   document.getElementById('eventTitle').value='';
   document.getElementById('eventLocation').value='';
+  const allDayEl=document.getElementById('eventAllDay'); if(allDayEl) allDayEl.checked=false;
   ['eventStartHour','eventStartMinute','eventStartAmPm','eventEndHour','eventEndMinute','eventEndAmPm'].forEach(id=>{const el=document.getElementById(id); if(el) el.value='';});
   const btn=document.getElementById('saveEventButton'); if(btn) btn.textContent='Add To Calendar';
   const cancel=document.getElementById('cancelEditButton'); if(cancel) cancel.style.display='none';
-  updateMinutesDisplay();
+  toggleAllDayEvent();
 }
 function setTimeParts(prefix, value){
   const mins=timeToMinutes(value);
@@ -1225,8 +1251,10 @@ function startEditSelectedEvent(){
   document.getElementById('eventLocation').value=e.location || '';
   document.getElementById('eventTitle').value=e.title || '';
   ['eventStartHour','eventStartMinute','eventStartAmPm','eventEndHour','eventEndMinute','eventEndAmPm'].forEach(id=>{const el=document.getElementById(id); if(el) el.value='';});
+  const allDayEl=document.getElementById('eventAllDay'); if(allDayEl) allDayEl.checked = timeToMinutes(e.start) === -1;
   setTimeParts('eventStart', e.start);
   setTimeParts('eventEnd', e.end);
+  toggleAllDayEvent();
   const btn=document.getElementById('saveEventButton'); if(btn) btn.textContent='Save Changes';
   const cancel=document.getElementById('cancelEditButton'); if(cancel) cancel.style.display='block';
   updateMinutesDisplay();
@@ -1236,8 +1264,11 @@ function saveScheduledEvent(){
   const date=document.getElementById('eventDate').value || selectedDate;
   const title=document.getElementById('eventTitle').value.trim();
   if(!date || !title){alert('Please enter a date and title.'); return;}
-  const start=timeFromParts('eventStart'), end=timeFromParts('eventEnd');
-  const e=normalizeEvent({id:editingEventId || 'local-'+Date.now(), date, type:document.getElementById('eventType').value, start, end, title, location:document.getElementById('eventLocation').value.trim(), owner:'Parent', minutes:calcMinutes(start,end)});
+  const allDay = !!document.getElementById('eventAllDay')?.checked;
+  const start = allDay ? 'All Day' : timeFromParts('eventStart');
+  const end = allDay ? '' : timeFromParts('eventEnd');
+  if(!allDay && (!start || !end)){ alert('Please choose a start and end time, or select All-day event.'); return; }
+  const e=normalizeEvent({id:editingEventId || 'local-'+Date.now(), date, type:document.getElementById('eventType').value, start, end, title, location:document.getElementById('eventLocation').value.trim(), owner:'Parent', minutes: allDay ? 0 : calcMinutes(start,end)});
   if(editingEventId){
     localAddedEvents = localAddedEvents.filter(item=>String(item.id)!==String(editingEventId));
     remoteEvents = remoteEvents.map(item=>String(item.id)===String(editingEventId) ? e : item);
@@ -1289,7 +1320,9 @@ function resetDashboardData(){
 
 function fillHourSelects(){
   ['eventStartHour','eventEndHour'].forEach(id=>{const sel=document.getElementById(id); for(let i=1;i<=12;i++){const o=document.createElement('option');o.value=String(i);o.textContent=String(i);sel.appendChild(o);}});
-  ['eventStartHour','eventStartMinute','eventStartAmPm','eventEndHour','eventEndMinute','eventEndAmPm'].forEach(id=>document.getElementById(id).addEventListener('change',updateMinutesDisplay));
+  ['eventStartHour','eventStartMinute','eventStartAmPm'].forEach(id=>document.getElementById(id).addEventListener('change',maybeDefaultEndTime));
+  ['eventEndHour','eventEndMinute','eventEndAmPm'].forEach(id=>document.getElementById(id).addEventListener('change',updateMinutesDisplay));
+  toggleAllDayEvent();
 }
 function init(){
   fillHourSelects();
