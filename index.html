@@ -153,6 +153,18 @@
     .journal-table th{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.06em}
     .status{font-size:12px;color:var(--muted);font-weight:800;margin-top:8px}
 
+    .btn.danger{background:#e53935;color:#fff}
+    .compact-journal-list{display:grid;gap:8px}
+    .compact-journal-row{border:1px solid var(--line);border-left:6px solid #bbb;border-radius:16px;background:#fff;padding:10px 12px;display:grid;gap:3px}
+    .compact-journal-row.ice{border-left-color:var(--ice);background:linear-gradient(90deg,var(--ice-soft),#fff 40%)}
+    .compact-journal-row.strength{border-left-color:var(--strength);background:linear-gradient(90deg,var(--strength-soft),#fff 40%)}
+    .compact-journal-row.shooting{border-left-color:var(--shooting);background:linear-gradient(90deg,var(--shooting-soft),#fff 40%)}
+    .compact-journal-row.stick{border-left-color:var(--stick);background:linear-gradient(90deg,var(--stick-soft),#fff 40%)}
+    .compact-journal-row.recovery{border-left-color:var(--recovery);background:linear-gradient(90deg,var(--recovery-soft),#fff 40%)}
+    .compact-journal-row.away{border-left-color:var(--away);background:linear-gradient(90deg,var(--away-soft),#fff 40%)}
+    .compact-journal-row .compact-top{display:flex;justify-content:space-between;gap:10px;font-size:13px;font-weight:900;line-height:1.2}
+    .compact-journal-row .compact-note{font-size:12px;color:var(--muted);font-weight:750;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
     .detail-overlay{position:fixed;inset:0;background:rgba(0,0,0,.48);z-index:999;display:none;align-items:center;justify-content:center;padding:16px}
 
     .journal-cards{display:grid;gap:10px}
@@ -415,7 +427,8 @@
                 <div class="field-label">Calculated minutes</div>
                 <div id="eventMinutesDisplay" class="empty">Choose start and end times</div>
               </div>
-              <button class="btn full" onclick="addEvent()">Add To Calendar</button>
+              <button class="btn full" id="saveEventButton" onclick="saveScheduledEvent()">Add To Calendar</button>
+              <button class="btn secondary full" id="cancelEditButton" onclick="cancelEditEvent()" style="display:none">Cancel Edit</button>
             </div>
           </div>
           <div class="card">
@@ -433,9 +446,11 @@
       <h2 id="eventDetailTitle">Event Details</h2>
       <div id="eventDetailBody"></div>
       <div class="detail-actions">
+        <button class="btn secondary" id="detailEditButton" onclick="startEditSelectedEvent()">Edit</button>
+        <button class="btn danger" id="detailDeleteButton" onclick="deleteSelectedEvent()">Delete</button>
         <button class="btn" onclick="closeEventDetail()">Close</button>
       </div>
-      <div class="status">For now, edit shared schedule rows directly in the Google Sheet. This avoids the update/delete sync issue while we stabilize the dashboard.</div>
+      <div class="status">Edits and deletes update the dashboard immediately and sync to the shared Google Sheet when the Apps Script has been updated.</div>
     </div>
   </div>
 
@@ -445,6 +460,8 @@
 const DASHBOARD_VERSION = 'graycen-final-icon-week-no-wisconsin-2026-06-07-v2';
 const STORAGE_KEY = 'graycenSummerDashboardSessions_recovery_v1';
 const JOURNAL_KEY = 'graycenSummerDashboardJournal_timefix_v5';
+const DELETED_KEY = 'graycenSummerDashboardDeletedEvents_v1';
+let editingEventId = '';
 const VERSION_KEY = 'graycenSummerDashboardVersion';
 const SHEET_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbw7-sHB4RcEVRg_GYjv_QnkUCi8-SH6X0nryXqqnnzev2fiUFJLrKef5CvIDKts9BotRw/exec';
 
@@ -539,6 +556,7 @@ const builtInSchedule = [...baseSessions, ...rawHomeSkills];
 let sessions = builtInSchedule.map(row => normalizeEvent({...row, builtIn:true}));
 let remoteEvents = [];
 let localAddedEvents = loadLocalAddedEvents();
+let deletedEventIds = loadDeletedEventIds();
 let journals = loadJournals();
 let selectedDate = todayLocalISO();
 let displayMonth = parseLocalDate(selectedDate);
@@ -864,6 +882,7 @@ function eventCard(e, compact=false){
   </div>`;
 }
 
+let currentDetailEventId = '';
 function openEventDetail(encodedId){
   const id = decodeURIComponent(encodedId || '');
   const e = allSessions().find(item => String(item.id) === String(id));
@@ -871,6 +890,7 @@ function openEventDetail(encodedId){
   const body = document.getElementById('eventDetailBody');
   const title = document.getElementById('eventDetailTitle');
   if(!overlay || !body || !title || !e) return;
+  currentDetailEventId = e.id || '';
   title.textContent = e.title || 'Event Details';
   const time = formatEventTime(e) || '—';
   const source = e.remote ? 'Google Sheet' : (e.builtIn || e.generated ? 'Built-in schedule' : 'Local / this device');
@@ -928,6 +948,16 @@ function moveWeek(n){setSelectedDate(toISODate(addDays(parseLocalDate(selectedDa
 function moveMonth(n){displayMonth=addMonths(displayMonth,n); renderMonth();}
 
 function showView(name){
+  if(name === 'home'){
+    const today = todayLocalISO();
+    selectedDate = today;
+    const d = parseLocalDate(today);
+    displayMonth = new Date(d.getFullYear(), d.getMonth(), 1, 12, 0, 0, 0);
+    ['selectedDate','selectedDateDay','journalDate','eventDate'].forEach(id=>{
+      const el=document.getElementById(id);
+      if(el) el.value=today;
+    });
+  }
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
   document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active', t.dataset.view===name));
   const view=document.getElementById('view-'+name);
@@ -962,7 +992,8 @@ function renderDay(){
   document.getElementById('dailySessionsHome').innerHTML=html;
 }
 function renderWeekList(){
-  const start=startOfWeek(parseLocalDate(selectedDate));
+  // Home page should show a true upcoming snapshot, not the old calendar week.
+  const start=parseLocalDate(todayLocalISO());
   const end=addDays(start,6);
   const events=eventsBetween(toISODate(start),toISODate(end));
   const grouped=[];
@@ -973,7 +1004,7 @@ function renderWeekList(){
       grouped.push(`<div><div class="muted" style="margin:10px 0 6px">${escapeHTML(formatDateHuman(iso))}</div>${awayNoticeHTML(iso)}${dayEvents.map(e=>eventCard(e,true)).join('') || '<div class="empty">No scheduled items.</div>'}</div>`);
     }
   }
-  document.getElementById('weekListHome').innerHTML=grouped.join('') || '<div class="empty">No scheduled items this week.</div>';
+  document.getElementById('weekListHome').innerHTML=grouped.join('') || '<div class="empty">No scheduled items in the next 7 days.</div>';
 }
 function renderWeekGrid(){
   const start=startOfWeek(parseLocalDate(selectedDate));
@@ -1089,18 +1120,33 @@ function journalCard(j){
     <div class="minute-badge"><strong>${Number(j.minutes||0)}</strong><span>min</span></div>
   </div>`;
 }
+function compactJournalRow(j){
+  const cls = typeClass(j.type);
+  const note = String(j.note || '').trim();
+  const recovery = j.recovery ? ' · Recovery' : '';
+  return `<div class="compact-journal-row ${cls}">
+    <div class="compact-top"><span>${escapeHTML(formatDateHuman(j.date))} · ${escapeHTML(typeLabel(j.type))}${recovery}</span><span>${Number(j.minutes||0)} min</span></div>
+    ${note ? `<div class="compact-note">${escapeHTML(note)}</div>` : ''}
+  </div>`;
+}
 function renderJournals(){
   const allJournals=combinedJournals();
   const cards=allJournals.slice(0,25).map(journalCard).join('');
-  const html=cards ? `<div class="journal-cards">${cards}</div>` : '<div class="empty">No journal entries yet.</div>';
-  document.getElementById('journalHistory').innerHTML=html;
-  document.getElementById('journalHistorySummary').innerHTML=html;
+  const journalHtml=cards ? `<div class="journal-cards">${cards}</div>` : '<div class="empty">No journal entries yet.</div>';
+  const summaryRows=allJournals.slice(0,40).map(compactJournalRow).join('');
+  const summaryHtml=summaryRows ? `<div class="compact-journal-list">${summaryRows}</div>` : '<div class="empty">No journal entries yet.</div>';
+  document.getElementById('journalHistory').innerHTML=journalHtml;
+  document.getElementById('journalHistorySummary').innerHTML=summaryHtml;
 }
 
 function loadLocalAddedEvents(){
   try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]').map(normalizeEvent); } catch { return []; }
 }
 function saveLocalAddedEvents(){try{localStorage.setItem(STORAGE_KEY, JSON.stringify(localAddedEvents));}catch(e){console.warn(e)}}
+function loadDeletedEventIds(){
+  try { return JSON.parse(localStorage.getItem(DELETED_KEY) || '[]').map(String); } catch { return []; }
+}
+function saveDeletedEventIds(){try{localStorage.setItem(DELETED_KEY, JSON.stringify(deletedEventIds));}catch(e){console.warn(e)}}
 async function loadRemoteEvents(){
   const status=document.getElementById('remoteStatus');
   try{
@@ -1115,9 +1161,9 @@ async function loadRemoteEvents(){
   }
   renderAll();
 }
-async function postEventToSheet(e){
+async function postEventToSheet(e, action='addEvent'){
   const payload=new URLSearchParams();
-  payload.set('action','addEvent');
+  payload.set('action',action);
   payload.set('id',e.id);
   payload.set('date',e.date);
   payload.set('startTime',e.start);
@@ -1149,15 +1195,85 @@ function updateMinutesDisplay(){
   const mins=calcMinutes(start,end);
   el.textContent = start && end ? `${mins} minutes` : 'Choose start and end times';
 }
-function addEvent(){
+function clearEventForm(){
+  editingEventId='';
+  document.getElementById('eventTitle').value='';
+  document.getElementById('eventLocation').value='';
+  ['eventStartHour','eventStartMinute','eventStartAmPm','eventEndHour','eventEndMinute','eventEndAmPm'].forEach(id=>{const el=document.getElementById(id); if(el) el.value='';});
+  const btn=document.getElementById('saveEventButton'); if(btn) btn.textContent='Add To Calendar';
+  const cancel=document.getElementById('cancelEditButton'); if(cancel) cancel.style.display='none';
+  updateMinutesDisplay();
+}
+function setTimeParts(prefix, value){
+  const mins=timeToMinutes(value);
+  if(mins === null || mins < 0) return;
+  let h=Math.floor(mins/60), m=mins%60;
+  const ap=h>=12?'PM':'AM';
+  h=h%12; if(h===0) h=12;
+  document.getElementById(prefix+'Hour').value=String(h);
+  document.getElementById(prefix+'Minute').value=String(m).padStart(2,'0');
+  document.getElementById(prefix+'AmPm').value=ap;
+}
+function startEditSelectedEvent(){
+  const e=allSessions().find(item => String(item.id) === String(currentDetailEventId));
+  if(!e) return;
+  closeEventDetail();
+  editingEventId=e.id;
+  showView('add');
+  document.getElementById('eventDate').value=e.date;
+  document.getElementById('eventType').value=normalizeType(e.type);
+  document.getElementById('eventLocation').value=e.location || '';
+  document.getElementById('eventTitle').value=e.title || '';
+  ['eventStartHour','eventStartMinute','eventStartAmPm','eventEndHour','eventEndMinute','eventEndAmPm'].forEach(id=>{const el=document.getElementById(id); if(el) el.value='';});
+  setTimeParts('eventStart', e.start);
+  setTimeParts('eventEnd', e.end);
+  const btn=document.getElementById('saveEventButton'); if(btn) btn.textContent='Save Changes';
+  const cancel=document.getElementById('cancelEditButton'); if(cancel) cancel.style.display='block';
+  updateMinutesDisplay();
+}
+function cancelEditEvent(){clearEventForm();}
+function saveScheduledEvent(){
   const date=document.getElementById('eventDate').value || selectedDate;
   const title=document.getElementById('eventTitle').value.trim();
   if(!date || !title){alert('Please enter a date and title.'); return;}
   const start=timeFromParts('eventStart'), end=timeFromParts('eventEnd');
-  const e=normalizeEvent({id:'local-'+Date.now(), date, type:document.getElementById('eventType').value, start, end, title, location:document.getElementById('eventLocation').value.trim(), owner:'Parent', minutes:calcMinutes(start,end)});
-  localAddedEvents.push(e); saveLocalAddedEvents(); renderAll();
-  postEventToSheet(e).then(ok=>{ alert(ok ? 'Event added. It was also sent to the shared Google Sheet.' : 'Event added locally, but the Google Sheet save may not have completed.'); });
-  document.getElementById('eventTitle').value=''; document.getElementById('eventLocation').value='';
+  const e=normalizeEvent({id:editingEventId || 'local-'+Date.now(), date, type:document.getElementById('eventType').value, start, end, title, location:document.getElementById('eventLocation').value.trim(), owner:'Parent', minutes:calcMinutes(start,end)});
+  if(editingEventId){
+    localAddedEvents = localAddedEvents.filter(item=>String(item.id)!==String(editingEventId));
+    remoteEvents = remoteEvents.map(item=>String(item.id)===String(editingEventId) ? e : item);
+    sessions = sessions.map(item=>String(item.id)===String(editingEventId) ? e : item);
+    localAddedEvents.push(e);
+    saveLocalAddedEvents();
+    renderAll();
+    postEventToSheet(e, 'updateEvent').then(()=>loadRemoteEvents());
+    alert('Event changes saved.');
+  } else {
+    localAddedEvents.push(e); saveLocalAddedEvents(); renderAll();
+    postEventToSheet(e, 'addEvent').then(()=>loadRemoteEvents());
+    alert('Event added.');
+  }
+  clearEventForm();
+}
+async function deleteSelectedEvent(){
+  const e=allSessions().find(item => String(item.id) === String(currentDetailEventId));
+  if(!e) return;
+  if(!confirm(`Delete ${e.title} on ${formatDateHuman(e.date)}?`)) return;
+  const id=String(e.id || '');
+  if(id && !deletedEventIds.includes(id)) deletedEventIds.push(id);
+  saveDeletedEventIds();
+  localAddedEvents = localAddedEvents.filter(item=>String(item.id)!==id);
+  remoteEvents = remoteEvents.filter(item=>String(item.id)!==id);
+  sessions = sessions.filter(item=>String(item.id)!==id);
+  saveLocalAddedEvents();
+  closeEventDetail();
+  renderAll();
+  const payload=new URLSearchParams();
+  payload.set('action','deleteEvent');
+  payload.set('id',id);
+  payload.set('date',e.date);
+  payload.set('title',e.title);
+  try{ await fetch(SHEET_WEB_APP_URL, {method:'POST', mode:'no-cors', headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8'}, body:payload.toString()}); }catch(err){ console.warn('Delete sync failed', err); }
+  setTimeout(loadRemoteEvents, 800);
 }
 
 function exportDashboardData(){
@@ -1167,7 +1283,7 @@ function exportDashboardData(){
 }
 function resetDashboardData(){
   if(confirm('This will delete journal entries and locally added events saved on this device. Continue?')){
-    localAddedEvents=[]; journals=[]; saveLocalAddedEvents(); saveJournals(); renderAll();
+    localAddedEvents=[]; journals=[]; deletedEventIds=[]; saveLocalAddedEvents(); saveDeletedEventIds(); saveJournals(); renderAll();
   }
 }
 
