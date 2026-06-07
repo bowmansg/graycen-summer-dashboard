@@ -1315,10 +1315,24 @@
     function normalizeTime(value){
       if(!value) return "";
       const text = String(value).trim();
+
+      // Already-clean values from the Sheet should pass through unchanged.
       if(/^\d{1,2}:\d{2}\s*(AM|PM)$/i.test(text)) return text.replace(/\s+/g," ").toUpperCase();
       if(text === "Logged" || text === "All Day" || text === "TBD") return text;
+
+      // Google Sheets sometimes sends time-only cells as 1899/1900 Date objects.
+      // In Safari/Chrome those old dates can display 33 minutes early because of
+      // historical timezone offsets. Adjust only those spreadsheet time-only dates.
       const d = new Date(text);
-      if(!isNaN(d.getTime())) return d.toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit"});
+      if(!isNaN(d.getTime())){
+        const y = d.getFullYear();
+        if(y <= 1900){
+          const fixed = new Date(d.getTime() + 33 * 60 * 1000);
+          return fixed.toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit"});
+        }
+        return d.toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit"});
+      }
+
       return text;
     }
 
