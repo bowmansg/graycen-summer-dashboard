@@ -814,6 +814,7 @@ function allSessions(){
   [...sessions, ...remoteEvents, ...localAddedEvents]
     .map(normalizeEvent)
     .filter(e => e && e.date && e.title)
+    .filter(e => !isJournalEvent(e))
     .filter(e => !isDuplicateAwayEvent(e))
     .forEach(e=>{
       const sem = eventSemanticKey(e);
