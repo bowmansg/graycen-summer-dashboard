@@ -884,6 +884,7 @@ function eventCard(e, compact=false){
 }
 
 let currentDetailEventId = '';
+let currentDetailEventData = null;
 function openEventDetail(encodedId){
   const id = decodeURIComponent(encodedId || '');
   const e = allSessions().find(item => String(item.id) === String(id));
@@ -892,6 +893,7 @@ function openEventDetail(encodedId){
   const title = document.getElementById('eventDetailTitle');
   if(!overlay || !body || !title || !e) return;
   currentDetailEventId = e.id || '';
+  currentDetailEventData = {...e};
   title.textContent = e.title || 'Event Details';
   const time = formatEventTime(e) || '—';
   const source = e.remote ? 'Google Sheet' : (e.builtIn || e.generated ? 'Built-in schedule' : 'Local / this device');
@@ -1241,23 +1243,29 @@ function setTimeParts(prefix, value){
   document.getElementById(prefix+'AmPm').value=ap;
 }
 function startEditSelectedEvent(){
-  const e=allSessions().find(item => String(item.id) === String(currentDetailEventId));
-  if(!e) return;
+  const e = allSessions().find(item => String(item.id) === String(currentDetailEventId)) || currentDetailEventData;
+  if(!e){ alert('Could not find this event to edit. Please refresh and try again.'); return; }
   closeEventDetail();
-  editingEventId=e.id;
+  editingEventId=e.id || makeEventId(e.date,e.start,e.title);
   showView('add');
-  document.getElementById('eventDate').value=e.date;
-  document.getElementById('eventType').value=normalizeType(e.type);
-  document.getElementById('eventLocation').value=e.location || '';
-  document.getElementById('eventTitle').value=e.title || '';
+  const dateEl=document.getElementById('eventDate'); if(dateEl) dateEl.value=e.date || selectedDate;
+  const typeEl=document.getElementById('eventType'); if(typeEl) typeEl.value=normalizeType(e.type);
+  const locEl=document.getElementById('eventLocation'); if(locEl) locEl.value=e.location || '';
+  const titleEl=document.getElementById('eventTitle'); if(titleEl) titleEl.value=e.title || '';
   ['eventStartHour','eventStartMinute','eventStartAmPm','eventEndHour','eventEndMinute','eventEndAmPm'].forEach(id=>{const el=document.getElementById(id); if(el) el.value='';});
-  const allDayEl=document.getElementById('eventAllDay'); if(allDayEl) allDayEl.checked = timeToMinutes(e.start) === -1;
+  const allDayEl=document.getElementById('eventAllDay');
+  if(allDayEl) allDayEl.checked = timeToMinutes(e.start) === -1 || String(e.start||'').toLowerCase().includes('all day');
   setTimeParts('eventStart', e.start);
   setTimeParts('eventEnd', e.end);
   toggleAllDayEvent();
   const btn=document.getElementById('saveEventButton'); if(btn) btn.textContent='Save Changes';
   const cancel=document.getElementById('cancelEditButton'); if(cancel) cancel.style.display='block';
   updateMinutesDisplay();
+  setTimeout(()=>{
+    const addView=document.getElementById('view-add');
+    if(addView) addView.scrollIntoView({behavior:'smooth', block:'start'});
+    if(titleEl) titleEl.focus({preventScroll:true});
+  }, 80);
 }
 function cancelEditEvent(){clearEventForm();}
 function saveScheduledEvent(){
