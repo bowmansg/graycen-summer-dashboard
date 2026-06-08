@@ -735,7 +735,7 @@ function timeToMinutes(value){
   m = s.match(/(?:1899|1900)[^T\n]*T(\d{2}):(\d{2})/i);
   if(m){
     let mins = Number(m[1])*60 + Number(m[2]);
-    if(/Z\s*$/i.test(s)) mins = (mins - 360 + 1440) % 1440; // Sheet time-only UTC serialization from Central time.
+    if(/Z\s*$/i.test(s)) mins = (mins - 300 + 1440) % 1440; // Sheet time-only UTC serialization during Central Daylight Time for summer training.
     return mins;
   }
   m = s.match(/(?:1899|1900).*?(\d{1,2}):(\d{2})(?::\d{2})?/i);
