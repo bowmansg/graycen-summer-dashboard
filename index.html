@@ -730,7 +730,7 @@
 <script>
 'use strict';
 
-const DASHBOARD_VERSION = 'graycen-dashboard-v3c-daily-tracker-2026-06-13';
+const DASHBOARD_VERSION = 'graycen-dashboard-v3d-away-filter-fix-2026-06-15';
 
 
 const SCHEDULE_TIME_ZONE = 'America/Chicago';
@@ -1058,11 +1058,20 @@ function eventSemanticKey(e){
 function isDuplicateAwayEvent(e){
   const block = getAwayBlock(e.date);
   if(!block) return false;
+
+  // IMPORTANT:
+  // During camps/tournaments, real ice events often include the trip name
+  // in the title, such as "Practice - Central Districts". The old logic
+  // treated that as a duplicate of the all-day Away block and hid it.
+  // Only hide true Away/travel rows here. Never hide Ice/Strength/Shooting items
+  // just because their title contains the away block name.
+  const typ = normalizeType(e.type);
   const title = String(e.title || '').trim().toLowerCase();
   const loc = String(e.location || '').trim().toLowerCase();
-  const typ = normalizeType(e.type);
   const blockTitle = String(block.event || '').trim().toLowerCase();
-  return typ === 'Away' || title === blockTitle || (title && blockTitle && (title.includes(blockTitle) || blockTitle.includes(title))) || loc === 'away';
+
+  if(typ !== 'Away') return false;
+  return title === blockTitle || loc === 'away' || title === 'away' || title === 'travel';
 }
 function eventQuality(e){
   let score = 0;
