@@ -745,7 +745,7 @@
 <script>
 'use strict';
 
-const DASHBOARD_VERSION = 'graycen-dashboard-v3g-todo-journal-match-fix-2026-06-15';
+const DASHBOARD_VERSION = 'graycen-dashboard-v3h-todo-journal-match-fix-2026-06-15';
 
 
 const SCHEDULE_TIME_ZONE = 'America/Chicago';
@@ -1227,7 +1227,19 @@ function journalForEvent(eventOrId){
     if(exact) return exact;
   }
   if(!eventObj) return null;
-  return journalsList.find(j=>journalMatchesEvent(j,eventObj)) || null;
+  const direct = journalsList.find(j=>journalMatchesEvent(j,eventObj));
+  if(direct) return direct;
+
+  // Legacy fallback: before the new Journal tab existed, some entries only had date/type
+  // and a free-text note, not a linked eventId or original event title. If there is exactly
+  // one journal on the same date and same type, count that event as journaled.
+  const sameDateType = journalsList.filter(j=>{
+    if(String(j.date || '') !== String(eventObj.date || '')) return false;
+    const jt = normalizedJournalType(j);
+    const et = normalizeType(eventObj.type);
+    return jt && et && jt === et;
+  });
+  return sameDateType.length === 1 ? sameDateType[0] : null;
 }
 function normalizeJournalMatchText(value){
   return String(value || '').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
@@ -1237,9 +1249,13 @@ function textLooksLikeSameEvent(a,b){
   if(!x || !y) return false;
   if(x === y) return true;
   // Allow older journal rows to match when the event title was stored inside the note/title text.
-  if(x.length >= 6 && y.includes(x)) return true;
-  if(y.length >= 6 && x.includes(y)) return true;
+  // Use a lower length threshold so names like Abbey/Phil can match.
+  if(x.length >= 4 && y.includes(x)) return true;
+  if(y.length >= 4 && x.includes(y)) return true;
   return false;
+}
+function normalizedJournalType(j){
+  return normalizeType(j.eventType || j.type || '');
 }
 function journalMatchesEvent(j,e){
   if(!j || !e) return false;
@@ -1654,10 +1670,13 @@ function loadJournals(){
 }
 function saveJournals(){try{localStorage.setItem(JOURNAL_KEY, JSON.stringify(journals));}catch(e){alert('This browser could not save the journal entry.')}}
 function isJournalEvent(e){
+  const id=String(e.id || '').toLowerCase();
   const owner=String(e.owner || '').toLowerCase();
   const start=String(e.start || '').toLowerCase();
   const loc=String(e.location || '').toLowerCase();
-  return owner === 'cam' || start === 'logged' || loc.includes('training journal');
+  // Older dashboards stored journal entries inside the Events tab instead of the Journal tab.
+  // Treat those rows as journals so they do not appear as To Do items and can clear matching events.
+  return id.startsWith('journal-') || ['graycen','cam','will'].includes(owner) || start === 'logged' || loc.includes('training journal');
 }
 function sheetJournalToEntry(j){
   return {
